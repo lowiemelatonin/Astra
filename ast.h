@@ -72,7 +72,7 @@ typedef struct astNode {
     nodeType type;
     union {
         struct {
-            char *identifier;
+            char *name;
         } identifier;
 
         struct {
@@ -93,7 +93,7 @@ typedef struct astNode {
         } define;
 
         struct {
-            astNode *pointer;
+            astNode *ptr;
         } pointer;
 
         struct {
@@ -157,7 +157,7 @@ typedef struct astNode {
     };
 } astNode;
 
-astNode *createIdentifierNode(char *identifier);
+astNode *createIdentifierNode(char *name);
 astNode *createValueNode(dataValue value);
 astNode *createAssignmentNode(astNode *left, astNode *right, opType op);
 astNode *createDefineNode(astNode *type, char *identifier, astNode *initializer, dataFlags flags);
@@ -170,7 +170,8 @@ astNode *createCallNode(astNode *identifier, astNode *args);
 astNode *createDataOperationNode(astNode *left, astNode *right, opType op);
 astNode *createIfNode(astNode *condition, astNode *then_branch, astNode *else_branch);
 astNode *createForNode(astNode *initializer, astNode *condition, astNode *increment, astNode *then_branch);
-astNode *createBreakAndContinueNode();
+astNode *createBreakNode();
+astNode *createContinueNode();
 astNode *createReturnNode(astNode *value);
 astNode *createImportNode(astNode *identifier);
 
