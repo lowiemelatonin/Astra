@@ -167,3 +167,83 @@ astNode *createImportNode(astNode *identifier){
     node->import_stmt.identifier = identifier;
     return node;
 }
+
+void freeAst(astNode *node){
+    if(!node) return;
+
+    switch(node->type){
+        case identifier_node:
+            free(node->identifier.name);
+            break;
+        case value_node:
+            if(node->data.value.type == type_string){
+                free(node->data.value.value.str_value);
+            }
+            break;
+        case assignment_node:
+            freeAst(node->assignment.left);
+            freeAst(node->assignment.right);
+            break;
+        case define_node:
+            freeAst(node->define.type);
+            free(node->define.identifier);
+            freeAst(node->define.initializer);
+            break;
+        case pointer_node:
+            freeAst(node->pointer.ptr);
+            break;
+        case body_node:
+            for(int i = 0; i < node->body.elements_count; i++){
+                freeAst(node->body.elements[i]);
+            }
+            free(node->body.elements);
+            break;
+        case array_node:
+            freeAst(node->array.type);
+            freeAst(node->array.size);
+            freeAst(node->array.elements);
+            break;
+        case array_access_node:
+            free(node->array_access.identifier);
+            freeAst(node->array_access.index);
+            break;
+        case function_node:
+            free(node->function.identifier);
+            freeAst(node->function.return_type);
+            freeAst(node->function.params);
+            freeAst(node->function.body);
+            break;
+        case call_node:
+            freeAst(node->call.identifier);
+            freeAst(node->call.args);
+            break;
+        case data_operation_node:
+            freeAst(node->operation.left);
+            freeAst(node->operation.right);
+            break;
+        case if_node:
+            freeAst(node->if_stmt.condition);
+            freeAst(node->if_stmt.then_branch);
+            freeAst(node->if_stmt.else_branch);
+            break;
+        case for_node:
+            freeAst(node->for_stmt.initializer);
+            freeAst(node->for_stmt.condition);
+            freeAst(node->for_stmt.increment);
+            freeAst(node->for_stmt.then_branch);
+            break;
+        case break_node:
+            break;
+        case continue_node:
+            break;
+        case return_node:
+            freeAst(node->return_stmt.value);
+            break;
+        case import_node:
+            freeAst(node->import_stmt.identifier);
+            break;
+        default:
+            break;
+    }
+    free(node);
+}
