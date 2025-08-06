@@ -49,6 +49,7 @@ typedef enum {
     double_quote_token,     // "
     comma_token,            // ,
     semicolon_token,        // ;
+    eof_token
 } token_type;
 
 typedef struct {
@@ -62,7 +63,9 @@ typedef union {
     struct {
         dataValue value;
         dataType type;
-    } data;
+    } properties;
+
+    char *identifier;
 } token_data;
 
 typedef struct {
