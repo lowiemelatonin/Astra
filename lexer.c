@@ -1,6 +1,8 @@
 #include "ast.h"
 #include "lexer.h"
 #include <string.h>
+#include <ctype.h>
+#include <stdbool.h>
 
 char peek(lexer *lexer){
     return lexer->src[lexer->position];
@@ -23,6 +25,16 @@ char advance(lexer *lexer){
         lexer->column++;
     }
     return current;
+}
+
+void skipWhiteSpace(lexer *lexer){
+    while(isspace(lexer->src[lexer->position])){
+        advance(lexer);
+    }
+}
+
+bool isAtEnd(lexer *lexer){
+    return lexer->src[lexer->position] == '\0';
 }
 
 token createToken(lexer *lexer, token_type type, token_data data, char *lexeme){
