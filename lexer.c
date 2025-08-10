@@ -37,6 +37,14 @@ bool isAtEnd(lexer *lexer){
     return lexer->src[lexer->position] == '\0';
 }
 
+bool match(lexer *lexer, char *expected){
+    if(isAtEnd(lexer)) return false;
+    if(peek(lexer) != expected) return false;
+
+    advance(lexer);
+    return true;
+}
+
 token createToken(lexer *lexer, token_type type, token_data data, char *lexeme){
     token token;
     token.type = type;
