@@ -10,6 +10,7 @@ typedef enum {
     int_token,              // int
     int_literal_token,      // 0, 1, 2, 3...
     long_token,             // long
+    long_literal_token,     // 100000000000000000000...
     float_token,            // float
     float_literal_token,    // 3.14...
     double_token,           // double
@@ -49,6 +50,7 @@ typedef enum {
     double_quote_token,     // "
     comma_token,            // ,
     semicolon_token,        // ;
+    null_token,
     eof_token
 } token_type;
 
@@ -79,5 +81,7 @@ typedef struct {
 token createToken(lexer *lexer, token_type type, token_data data, char *lexeme);
 token nextToken(lexer *lexer, char *src);
 void initLexer(lexer *lexer, char *src);
+void freeLexer(lexer *lexer);
+void freeToken(token *token);
 
 #endif
