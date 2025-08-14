@@ -107,6 +107,34 @@ token lexNums(lexer *lexer){
     return token;
 }
 
+token lexStr(lexer *lexer){
+    long long start = lexer->position;
+
+    while(!isAtEnd(lexer) && peek(lexer) != '"'){
+        if(peek(lexer) == '\\' && peekNext(lexer) == '"') advance(lexer);
+        advance(lexer);
+    }
+
+    if(isAtEnd(lexer)){
+        return createToken(lexer, null_token, (token_data){0}, "");
+    }
+
+    advance(lexer);
+    long long len = lexer->position - start - 1;
+    char *str = malloc(len + 1);
+    if(!str) return createToken(lexer, null_token, (token_data){0}, "");
+
+    memcpy(str, &lexer->src[start], len);
+    str[len] = '\0';
+
+    token_data data = {0};
+    data.properties.type = type_string;
+    data.properties.value.value.str_value = strdup(str);
+
+    token token = createToken(lexer, string_token, data, str);
+    return token;
+}
+
 token nextToken(lexer *lexer, char *src);
 
 void initLexer(lexer *lexer, char *src){
