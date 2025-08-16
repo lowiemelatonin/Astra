@@ -135,6 +135,54 @@ token lexStr(lexer *lexer){
     return token;
 }
 
+token lexIdent(lexer *lexer){
+    long long start = lexer->position;
+    while(isalnum(peek(lexer)) || peek(lexer) == '_'){
+        advance(lexer);
+    }
+
+    long long len = lexer->position - start;
+    char *text = malloc(len + 1);
+    if(!text) return createToken(lexer, null_token, (token_data){0}, "");
+
+    memcpy(text, &lexer->src[start], len);
+    text[len] = '\0';
+
+    token_type type = identifier_token;
+    #define keyword(str, tk) if(strcmp(text, str) == 0) type = tk;
+
+    keyword("if", if_token);
+    keyword("else", else_token);
+    keyword("for", for_token);
+    keyword("define", define_token);
+
+    keyword("import", import_token);
+    keyword("fun", function_token);
+    keyword("return", return_token);
+    keyword("break", break_token);
+
+    keyword("continue", continue_token);
+    keyword("const", const_token);
+    keyword("static", static_token);
+    keyword("int", int_token);
+
+    keyword("long", long_token);
+    keyword("float", float_token);
+    keyword("double", double_token);
+    keyword("string", string_token);
+
+    #undef keyword;
+
+    token_data data = {0};
+    if(type == identifier_token){
+        data.identifier = strdup(text);
+    }
+
+    token token = createToken(lexer, type, data, text);
+    free(text);
+    return token;
+}
+
 token nextToken(lexer *lexer, char *src);
 
 void initLexer(lexer *lexer, char *src){
