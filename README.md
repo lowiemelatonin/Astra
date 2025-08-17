@@ -1,5 +1,12 @@
 # Astra
 Everything is under development, and not fully integrated yet.  
+
+What is actually done
+- [x] ast
+- [x] lexer
+- [ ] parser
+- [ ] analyzer
+- [ ] interpreter
 ```
 fun main() int{
   return 0;
