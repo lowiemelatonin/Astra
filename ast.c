@@ -60,7 +60,10 @@ astNode *createPointerNode(astNode *ptr){
     astNode *node = allocNode(pointer_node);
     node->pointer.ptr = ptr;
     
-    if(!node->pointer.ptr) return NULL;
+    if(!node->pointer.ptr){
+        free(node->pointer.ptr);
+        return NULL;
+    }
     return node;
 }
 

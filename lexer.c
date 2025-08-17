@@ -128,10 +128,10 @@ token lexStr(lexer *lexer){
     str[len] = '\0';
 
     token_data data = {0};
-    data.properties.type = type_string;
+    data.properties.value.type = type_string;
     data.properties.value.value.str_value = strdup(str);
 
-    token token = createToken(lexer, string_token, data, str);
+    token token = createToken(lexer, string_literal_token, data, str);
     return token;
 }
 
@@ -183,7 +183,82 @@ token lexIdent(lexer *lexer){
     return token;
 }
 
-token nextToken(lexer *lexer, char *src);
+token nextToken(lexer *lexer, char *src){
+    skipWhiteSpace(lexer);
+
+    if(isAtEnd(lexer)){
+        return createToken(lexer, eof_token, (token_data){0}, "");
+    }
+
+    char current = advance(lexer);
+
+    if(isalpha(current) || current == '_'){
+        lexer->position--;
+        lexer->column--;
+        return lexIdent(lexer);
+    }
+
+    if(isdigit(current)){
+        lexer->position--;
+        lexer->column--;
+        return lexNums(lexer);
+    }
+
+    if(current == '"' || current == '\''){
+        return lexStr(lexer);
+    }
+
+    switch(current){
+        case '+':
+            return createToken(lexer, plus_token, (token_data){0}, "+");
+        case '-':
+            if(match(lexer, ">")) return createToken(lexer, arrow_token, (token_data){0}, "->");
+            return createToken(lexer, minus_token, (token_data){0}, "-");
+        case '*':
+            return createToken(lexer, star_token, (token_data){0}, '*');
+        case '/':
+            return createToken(lexer, slash_token, (token_data){0}, '/');
+        case '%':
+            return createToken(lexer, percent_token, (token_data){0}, '%');
+        case '=':
+            if(match(lexer, '=')) return createToken(lexer, equal_equal_token, (token_data){0}, "==");
+            return createToken(lexer, equal_token, (token_data){0}, '=');
+        case '!':
+            if(match(lexer, '=')) return createToken(lexer, not_equal_token, (token_data){0}, "!=");
+            return createToken(lexer, not_token, (token_data){0}, '!');
+        case '>':
+            if(match(lexer, '=')) return createToken(lexer, greater_equal_token, (token_data){0}, ">=");
+            return createToken(lexer, greater_token, (token_data){0}, '>');
+        case '<':
+            if(match(lexer, '=')) return createToken(lexer, less_equal_token, (token_data){0}, "<=");
+            return createToken(lexer, less_token, (token_data){0}, '<');
+        case '&':
+            if(match(lexer, '&')) return createToken(lexer, and_token, (token_data){0}, "&&");
+            return createToken(lexer, address_token, (token_data){0}, '&');
+        case '|':
+            return createToken(lexer, or_token, (token_data){0}, "||");
+        case '(':
+            return createToken(lexer, l_paren_token, (token_data){0}, '(');
+        case ')':
+            return createToken(lexer, r_paren_token, (token_data){0}, ')');
+        case '[':
+            return createToken(lexer, l_bracket_token, (token_data){0}, '[');
+        case ']':
+            return createToken(lexer, r_bracket_token, (token_data){0}, ']');
+        case '{':
+            return createToken(lexer, l_brace_token, (token_data){0}, '{');
+        case '}':
+            return createToken(lexer, r_brace_token, (token_data){0}, '}');
+        case ',':
+            return createToken(lexer, comma_token, (token_data){0}, ',');
+        case '.':
+            return createToken(lexer, dot_token, (token_data){0}, '.');
+        case ';':
+            return createToken(lexer, semicolon_token, (token_data){0}, ';');
+        default:
+            return createToken(lexer, null_token, (token_data){0}, "");
+    }
+}
 
 void initLexer(lexer *lexer, char *src){
     lexer->src = strdup(src);
