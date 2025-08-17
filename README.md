@@ -1,7 +1,6 @@
 # Astra
 Everything is under development, and not fully integrated yet.  
-
-What is actually done
+The current progress?
 - [x] ast
 - [x] lexer
 - [ ] parser
