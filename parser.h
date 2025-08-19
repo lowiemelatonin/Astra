@@ -9,5 +9,5 @@ typedef struct {
 } parser;
 
 void initParser(parser *parser, lexer *lexer);
-void advance(parser *parser);
+void advanceParser(parser *parser);
 #endif

@@ -183,7 +183,7 @@ token lexIdent(lexer *lexer){
     return token;
 }
 
-token nextToken(lexer *lexer, char *src){
+token nextToken(lexer *lexer){
     skipWhiteSpace(lexer);
 
     if(isAtEnd(lexer)){

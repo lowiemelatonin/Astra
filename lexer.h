@@ -82,7 +82,7 @@ typedef struct {
 } token;
 
 token createToken(lexer *lexer, token_type type, token_data data, char *lexeme);
-token nextToken(lexer *lexer, char *src);
+token nextToken(lexer *lexer);
 void initLexer(lexer *lexer, char *src);
 void freeLexer(lexer *lexer);
 void freeToken(token *token);
