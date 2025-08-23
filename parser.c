@@ -9,11 +9,11 @@ void advanceParser(parser *parser){
     parser->current = nextToken(parser->lexer);
 }
 
-parser *parseExpression(parser *parser){
-    return parsePrimary(parser); // This is gonna be replaced soon btw  
+astNode *parseExpression(parser *parser){
+    return parseUnary(parser); // This is gonna be replaced soon btw  
 }
 
-parser *parsePrimary(parser *parser){
+astNode *parsePrimary(parser *parser){
     token token = parser->current;
 
     if(token.type == int_literal_token || token.type == long_literal_token || token.type == float_literal_token || token.type == string_literal_token){
@@ -39,4 +39,39 @@ parser *parsePrimary(parser *parser){
     }
 
     return NULL;
+}
+
+astNode *parseUnary(parser *parser){
+    token_type current_type = parser->current.type;
+
+    if(current_type == not_token || current_type == minus_token || current_type == plus_token || current_type == star_token || current_type == address_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseUnary(parser);
+        opType operation;
+
+        switch(op.type){
+            case not_token: 
+                operation = not_op;
+                break;
+            case minus_token:
+                operation = minus_op;
+                break;
+            case plus_token:
+                operation = plus_op;
+                break;
+            case star_token:
+                operation = dereference_op;
+                break;
+            case address_token:
+                operation = address_op;
+                break;
+            default:
+                return NULL;
+        }
+
+        return createDataOperationNode(NULL, right, operation);
+    }
+    return parsePrimary(parser);
 }

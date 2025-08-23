@@ -38,7 +38,10 @@ typedef enum {
     less_or_equal_op, 
     greater_or_equal_op,
 
-    assignment_op
+    assignment_op,
+
+    dereference_op,
+    address_op
 } opType;
 
 typedef enum {
