@@ -10,7 +10,7 @@ void advanceParser(parser *parser){
 }
 
 astNode *parseExpression(parser *parser){
-    return parseUnary(parser); // This is gonna be replaced soon btw  
+    return parseMultiplicative(parser); // This is gonna be replaced soon btw  
 }
 
 astNode *parsePrimary(parser *parser){
@@ -76,11 +76,35 @@ astNode *parseUnary(parser *parser){
     return parsePrimary(parser);
 }
 
-// next step
 astNode *parseMultiplicative(parser *parser){
+    astNode *left = parseUnary(parser);
 
+    while(parser->current.type == star_token || parser->current.type == slash_token || parser->current.type == percent_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseUnary(parser);
+
+        opType operation;
+        switch(op.type){
+            case star_token:
+                operation = star_op;
+                break;
+            case slash_token:
+                operation = slash_op;
+                break;
+            case percent_token:
+                operation = percent_op;
+                break;
+            default:
+                return left;
+        }
+        left = createDataOperationNode(left, right, operation);
+    }
+    return left;
 }
 
+// next step
 astNode *parseAdditive(parser *parser){
 
 }
