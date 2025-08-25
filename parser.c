@@ -10,7 +10,7 @@ void advanceParser(parser *parser){
 }
 
 astNode *parseExpression(parser *parser){
-    return parseMultiplicative(parser); // This is gonna be replaced soon btw  
+    return parseAdditive(parser); // This is gonna be replaced soon btw  
 }
 
 astNode *parsePrimary(parser *parser){
@@ -104,7 +104,27 @@ astNode *parseMultiplicative(parser *parser){
     return left;
 }
 
-// next step
 astNode *parseAdditive(parser *parser){
+    astNode *left = parseMultiplicative(parser);
 
+    while(parser->current.type == plus_token || parser->current.type == minus_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseUnary(parser);
+
+        opType operation;
+        switch(op.type){
+            case plus_token:
+                operation = plus_op;
+                break;
+            case minus_token:
+                operation = minus_op;
+                break;
+            default:
+                return left;
+        }
+        left = createDataOperationNode(left, right, operation);
+    }
+    return left;
 }
