@@ -75,3 +75,12 @@ astNode *parseUnary(parser *parser){
     }
     return parsePrimary(parser);
 }
+
+// next step
+astNode *parseMultiplicative(parser *parser){
+
+}
+
+astNode *parseAdditive(parser *parser){
+
+}
