@@ -50,6 +50,7 @@ typedef enum {
     double_quote_token,     // "
     comma_token,            // ,
     semicolon_token,        // ;
+    colon_token,            // :
     address_token,          // &
     dot_token,              // .
     arrow_token,            // ->
