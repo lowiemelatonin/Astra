@@ -255,6 +255,8 @@ token nextToken(lexer *lexer){
             return createToken(lexer, dot_token, (token_data){0}, '.');
         case ';':
             return createToken(lexer, semicolon_token, (token_data){0}, ';');
+        case ':':
+            return createToken(lexer, colon_token, (token_data){0}, ':');
         default:
             return createToken(lexer, null_token, (token_data){0}, "");
     }
