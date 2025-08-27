@@ -111,7 +111,7 @@ astNode *parseAdditive(parser *parser){
         token op = parser->current;
         advanceParser(parser);
 
-        astNode *right = parseUnary(parser);
+        astNode *right = parseMultiplicative(parser);
 
         opType operation;
         switch(op.type){
@@ -120,6 +120,37 @@ astNode *parseAdditive(parser *parser){
                 break;
             case minus_token:
                 operation = minus_op;
+                break;
+            default:
+                return left;
+        }
+        left = createDataOperationNode(left, right, operation);
+    }
+    return left;
+}
+
+astNode *parseRelational(parser *parser){
+    astNode *left = parseAdditive(parser);
+
+    while(parser->current.type == less_token || parser->current.type == less_equal_token || parser->current.type == greater_token || parser->current.type == greater_equal_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseAdditive(parser);
+
+        opType operation;
+        switch(op.type){
+            case less_token:
+                operation = less_op;
+                break;
+            case less_equal_token:
+                operation = less_or_equal_op;
+                break;
+            case greater_token:
+                operation = greater_op;
+                break;
+            case greater_equal_token:
+                operation = greater_or_equal_op;
                 break;
             default:
                 return left;
