@@ -32,7 +32,7 @@ typedef enum {
     not_op,
 
     equal_op,
-    not_equal,
+    not_equal_op,
     less_op,
     greater_op,
     less_or_equal_op, 

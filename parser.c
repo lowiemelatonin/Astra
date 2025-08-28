@@ -159,3 +159,29 @@ astNode *parseRelational(parser *parser){
     }
     return left;
 }
+
+astNode *parseEquality(parser *parser){
+    astNode *left = parseRelational(parser);
+
+    while(parser->current.type == equal_equal_token || parser->current.type == not_equal_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseRelational(parser);
+
+        opType operation;
+        switch(op.type){
+            case equal_equal_token:
+                operation = equal_op;
+                break;
+            case not_equal_token:
+                operation = not_equal_op;
+                break;
+            default:
+                return left;
+        }
+        left = createDataOperationNode(left, right, operation);
+    }
+    return left;
+}
+
