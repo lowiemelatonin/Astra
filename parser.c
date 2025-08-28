@@ -10,7 +10,7 @@ void advanceParser(parser *parser){
 }
 
 astNode *parseExpression(parser *parser){
-    return parseRelational(parser); // This is gonna be replaced soon btw  
+    return parseEquality(parser); // This is gonna be replaced soon btw  
 }
 
 astNode *parsePrimary(parser *parser){
