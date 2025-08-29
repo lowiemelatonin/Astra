@@ -193,16 +193,7 @@ astNode *parseLogicalAnd(parser *parser){
         advanceParser(parser);
 
         astNode *right = parseEquality(parser);
-
-        opType operation;
-        switch(op.type){
-            case and_token:
-                operation = and_op;
-                break;
-            default:
-                return left;
-        }
-        left = createDataOperationNode(left, right, operation);
+        left = createDataOperationNode(left, right, and_op);
     }
     return left;
 }
@@ -215,16 +206,7 @@ astNode *parseLogicalOr(parser *parser){
         advanceParser(parser);
 
         astNode *right = parseLogicalAnd(parser);
-
-        opType operation;
-        switch(op.type){
-            case or_token:
-                operation = or_op;
-                break;
-            default:
-                return left;
-        }
-        left = createDataOperationNode(left, right, operation);
+        left = createDataOperationNode(left, right, or_op);
     }
     return left;
 }
