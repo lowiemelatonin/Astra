@@ -10,7 +10,7 @@ void advanceParser(parser *parser){
 }
 
 astNode *parseExpression(parser *parser){
-    return parseLogicalOr(parser); // This is gonna be replaced soon btw  
+    return parseAssignment(parser); // This is gonna be replaced soon btw  
 }
 
 astNode *parsePrimary(parser *parser){
@@ -207,6 +207,19 @@ astNode *parseLogicalOr(parser *parser){
 
         astNode *right = parseLogicalAnd(parser);
         left = createDataOperationNode(left, right, or_op);
+    }
+    return left;
+}
+
+astNode *parseAssignment(parser *parser){
+    astNode *left = parseLogicalOr(parser);
+
+    while(parser->current.type == equal_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseLogicalOr(parser);
+        left = createAssignmentNode(left, right, assignment_op);
     }
     return left;
 }
