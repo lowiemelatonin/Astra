@@ -223,3 +223,30 @@ astNode *parseAssignment(parser *parser){
     }
     return left;
 }
+
+astNode *parseReturnStatement(parser *parser){
+    advanceParser(parser);
+    astNode *value = NULL;
+    
+    if(parser->current.type != semicolon_token){
+        value = parseExpression(parser);
+    }
+
+    if(parser->current.type != semicolon_token) return NULL;
+    advanceParser(parser);
+    return createReturnNode(value);
+}
+
+astNode *parseContinueStatement(parser *parser){
+    advanceParser(parser);
+    if(parser->current.type != semicolon_token) return NULL;
+    advanceParser(parser);
+    return createContinueNode();
+}
+
+astNode *parseBreakStatement(parser *parser){
+    advanceParser(parser);
+    if(parser->current.type != semicolon_token) return NULL;
+    advanceParser(parser);
+    return createBreakNode();
+}
