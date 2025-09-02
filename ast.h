@@ -177,5 +177,6 @@ astNode *createBreakNode();
 astNode *createContinueNode();
 astNode *createReturnNode(astNode *value);
 astNode *createImportNode(astNode *identifier);
+void freeAst(astNode *node)
 
 #endif

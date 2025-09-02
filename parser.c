@@ -250,3 +250,60 @@ astNode *parseBreakStatement(parser *parser){
     advanceParser(parser);
     return createBreakNode();
 }
+
+astNode *parseBody(parser *parser){
+    if(parser->current.type != l_brace_token) return NULL;
+    advanceParser(parser);
+
+    astNode **elements = NULL;
+    int count = 0;
+
+    while(parser->current.type != r_brace_token && parser->current.type != eof_token){
+        astNode *stmt = parseStatement(parser);
+
+        if(!stmt){
+            for(int i = 0; i < count; i++) freeAst(elements[i]);
+            free(elements);
+            return NULL;
+        }
+
+        astNode **tmp = realloc(elements, sizeof(astNode *) * (count + 1));
+        
+        if(!tmp){
+            for(int i = 0; i < count; i++) freeAst(elements[i]);
+            free(elements);
+            return NULL;
+        }
+
+        elements = tmp;
+        elements[count++] = stmt;
+    }
+
+    if(parser->current.type != r_brace_token){
+        for(int i = 0; i < count; i++) freeAst(elements[i]);
+        free(elements);
+        return NULL;
+    }
+
+    advanceParser(parser);
+    return createBodyNode(elements, count);
+}
+
+astNode *parseStatement(parser *parser){
+    switch(parser->current.type){
+        case l_brace_token:
+            return parseBody(parser);
+        default: {
+            astNode *expr = parseExpression(parser);
+            if(!expr) return NULL;
+
+            if(parser->current.type != semicolon_token){
+                freeAst(expr);
+                return NULL;
+            }
+
+            advanceParser(parser);
+            return expr;
+        }
+    }
+}
