@@ -289,10 +289,54 @@ astNode *parseBody(parser *parser){
     return createBodyNode(elements, count);
 }
 
+astNode *parseIfStatement(parser *parser){
+    if(parser->current.type != if_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token) return NULL;
+    advanceParser(parser);
+
+    astNode *condition = parseExpression(parser);
+    if(!condition) return NULL;
+
+    if(parser->current.type != r_paren_token){
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *then_branch = parseStatement(parser);
+    if(!then_branch){
+        freeAst(condition);
+        return NULL;
+    }
+
+    astNode *else_branch = NULL;
+    if(parser->current.type == else_token){
+        advanceParser(parser);
+        else_branch = parseStatement(parser);
+        if(!else_branch){
+            freeAst(condition);
+            freeAst(then_branch);
+            return NULL;
+        }
+    }
+
+    return createIfNode(condition, then_branch, else_branch);
+}
+
 astNode *parseStatement(parser *parser){
     switch(parser->current.type){
+        case return_token:
+            return parseReturnStatement(parser);
+        case continue_token:
+            return parseContinueStatement(parser);
+        case break_token:
+            return parseBreakStatement(parser);
         case l_brace_token:
             return parseBody(parser);
+        case if_token:
+            return parseIfStatement(parser);
         default: {
             astNode *expr = parseExpression(parser);
             if(!expr) return NULL;
