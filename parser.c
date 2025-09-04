@@ -10,7 +10,7 @@ void advanceParser(parser *parser){
 }
 
 astNode *parseExpression(parser *parser){
-    return parseAssignment(parser); // This is gonna be replaced soon btw  
+    return parseAssignment(parser);
 }
 
 astNode *parsePrimary(parser *parser){
@@ -41,10 +41,33 @@ astNode *parsePrimary(parser *parser){
     return NULL;
 }
 
+astNode *parsePostfix(parser *parser){
+    astNode *expr = parsePrimary(parser);
+    while(parser->current.type == increment_token || parser->current.type == decrement_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        opType operation;
+        
+        switch(op.type){
+            case decrement_token:
+                operation = decrement_op;
+                break;
+            case increment_token:
+                operation = increment_op;
+                break;
+            default:
+                return expr;
+        }
+        expr = createDataOperationNode(expr, NULL, operation);
+    }
+    return expr;
+}
+
 astNode *parseUnary(parser *parser){
     token_type current_type = parser->current.type;
 
-    if(current_type == not_token || current_type == minus_token || current_type == plus_token || current_type == star_token || current_type == address_token){
+    if(current_type == not_token || current_type == minus_token || current_type == decrement_token || current_type == plus_token || current_type == increment_token || current_type == star_token || current_type == address_token){
         token op = parser->current;
         advanceParser(parser);
 
@@ -74,7 +97,7 @@ astNode *parseUnary(parser *parser){
                 operation = address_op;
                 break;
             default:
-                return NULL;
+                return parsePostfix(parser);
         }
 
         return createDataOperationNode(NULL, right, operation);
@@ -403,6 +426,8 @@ astNode *parseStatement(parser *parser){
             return parseBody(parser);
         case if_token:
             return parseIfStatement(parser);
+        case for_token:
+            return parseForStatement(parser);
         default: {
             astNode *expr = parseExpression(parser);
             if(!expr) return NULL;
