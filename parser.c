@@ -58,8 +58,14 @@ astNode *parseUnary(parser *parser){
             case minus_token:
                 operation = minus_op;
                 break;
+            case decrement_token:
+                operation = decrement_op;
+                break;
             case plus_token:
                 operation = plus_op;
+                break;
+            case increment_token:
+                operation = increment_op;
                 break;
             case star_token:
                 operation = dereference_op;
@@ -323,6 +329,66 @@ astNode *parseIfStatement(parser *parser){
     }
 
     return createIfNode(condition, then_branch, else_branch);
+}
+
+astNode *parseForStatement(parser *parser){
+    if(parser->current.type != for_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token) return NULL;
+    advanceParser(parser);
+
+    astNode *initializer = NULL;
+    if(parser->current.type != semicolon_token){
+        initializer = parseExpression(parser);
+        if(!initializer) return NULL;
+    }
+    if(parser->current.type != semicolon_token){
+        freeAst(initializer);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *condition = NULL;
+    if(parser->current.type != semicolon_token){
+        condition = parseExpression(parser);
+        if(!condition){
+            freeAst(initializer);
+            return NULL;
+        }
+    }
+    if(parser->current.type != semicolon_token){
+        freeAst(initializer);
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *increment = NULL;
+    if(parser->current.type != r_paren_token){
+        increment = parseExpression(parser);
+        if(!increment){
+            freeAst(initializer);
+            freeAst(condition);
+            return NULL;
+        }
+    }
+    if(parser->current.type != r_paren_token){
+        freeAst(initializer);
+        freeAst(condition);
+        freeAst(increment);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *then_branch = parseStatement(parser);
+    if(!then_branch){
+        freeAst(initializer);
+        freeAst(condition);
+        freeAst(increment);
+        return NULL;
+    }
+    return createForNode(initializer, condition, increment, then_branch);
 }
 
 astNode *parseStatement(parser *parser){

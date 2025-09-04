@@ -22,7 +22,9 @@ typedef struct {
 
 typedef enum {
     plus_op,
+    increment_op,
     minus_op,
+    decrement_op,
     star_op,
     slash_op,
     percent_op,

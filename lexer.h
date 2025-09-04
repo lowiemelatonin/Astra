@@ -17,7 +17,9 @@ typedef enum {
     string_token,           // string
     string_literal_token,   // "dolor sit"
     plus_token,             // +
+    increment_token,        // ++
     minus_token,            // -
+    decrement_token,        // --
     star_token,             // *
     slash_token,            // /
     percent_token,          // %

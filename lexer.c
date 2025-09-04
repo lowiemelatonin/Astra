@@ -210,8 +210,10 @@ token nextToken(lexer *lexer){
 
     switch(current){
         case '+':
+            if(peekNext(lexer) == '+') return createToken(lexer, increment_token, (token_data){0}, "++");
             return createToken(lexer, plus_token, (token_data){0}, "+");
         case '-':
+            if(peekNext(lexer) == '-') return createToken(lexer, decrement_token, (token_data){0}, "--");
             if(match(lexer, ">")) return createToken(lexer, arrow_token, (token_data){0}, "->");
             return createToken(lexer, minus_token, (token_data){0}, "-");
         case '*':
