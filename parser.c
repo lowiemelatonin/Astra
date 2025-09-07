@@ -414,6 +414,18 @@ astNode *parseForStatement(parser *parser){
     return createForNode(initializer, condition, increment, then_branch);
 }
 
+astNode *parseImportStatement(parser *parser){
+    if(parser->current.type != import_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != string_literal_token) return NULL;
+
+    char *filename = strdup(parser->current.data.properties.value.value.str_value);
+    advanceParser(parser);
+
+    return createImportNode(filename);
+}
+
 astNode *parseStatement(parser *parser){
     switch(parser->current.type){
         case return_token:
@@ -428,6 +440,8 @@ astNode *parseStatement(parser *parser){
             return parseIfStatement(parser);
         case for_token:
             return parseForStatement(parser);
+        case import_token:
+            return parseImportStatement(parser);
         default: {
             astNode *expr = parseExpression(parser);
             if(!expr) return NULL;
