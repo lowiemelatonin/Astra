@@ -13,5 +13,6 @@ typedef struct {
 void initParser(parser *parser, lexer *lexer);
 void advanceParser(parser *parser);
 astNode *parseExpression(parser *parser);
+astNode *parseStatement(parser *parser);
 
 #endif

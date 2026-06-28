@@ -1,5 +1,28 @@
 #include "parser.h"
 
+// Forward declarations
+astNode *parseAssignment(parser *parser);
+astNode *parsePrimary(parser *parser);
+astNode *parsePostfix(parser *parser);
+astNode *parseUnary(parser *parser);
+astNode *parseMultiplicative(parser *parser);
+astNode *parseAdditive(parser *parser);
+astNode *parseRelational(parser *parser);
+astNode *parseEquality(parser *parser);
+astNode *parseLogicalAnd(parser *parser);
+astNode *parseLogicalOr(parser *parser);
+astNode *parseReturnStatement(parser *parser);
+astNode *parseContinueStatement(parser *parser);
+astNode *parseBreakStatement(parser *parser);
+astNode *parseBody(parser *parser);
+astNode *parseIfStatement(parser *parser);
+astNode *parseForStatement(parser *parser);
+astNode *parseImportStatement(parser *parser);
+astNode *parseFunction(parser *parser);
+astNode *parseParamList(parser *parser);
+astNode *parseType(parser *parser);
+dataFlags parseFlags(parser *parser);
+
 void initParser(parser *parser, lexer *lexer){
     parser->lexer = lexer;
     parser->current = nextToken(lexer);
@@ -7,6 +30,18 @@ void initParser(parser *parser, lexer *lexer){
 
 void advanceParser(parser *parser){
     parser->current = nextToken(parser->lexer);
+}
+
+astNode *parseAssignment(parser *parser){
+    astNode *left = parseLogicalOr(parser);
+
+    while(parser->current.type == equal_token){
+        advanceParser(parser);
+
+        astNode *right = parseLogicalOr(parser);
+        left = createAssignmentNode(left, right, assignment_op);
+    }
+    return left;
 }
 
 astNode *parseExpression(parser *parser){
@@ -24,7 +59,6 @@ astNode *parsePrimary(parser *parser){
 
     if(token.type == identifier_token || token.type == const_token || token.type == static_token){
         dataFlags flags = parseFlags(parser);
-
         if(parser->current.type != identifier_token) return NULL;
 
         char *name = parser->current.data.identifier;
@@ -285,7 +319,6 @@ astNode *parseLogicalAnd(parser *parser){
     astNode *left = parseEquality(parser);
 
     while(parser->current.type == and_token){
-        token op = parser->current;
         advanceParser(parser);
 
         astNode *right = parseEquality(parser);
@@ -298,24 +331,10 @@ astNode *parseLogicalOr(parser *parser){
     astNode *left = parseLogicalAnd(parser);
 
     while(parser->current.type == or_token){
-        token op = parser->current;
         advanceParser(parser);
 
         astNode *right = parseLogicalAnd(parser);
         left = createDataOperationNode(left, right, or_op);
-    }
-    return left;
-}
-
-astNode *parseAssignment(parser *parser){
-    astNode *left = parseLogicalOr(parser);
-
-    while(parser->current.type == equal_token){
-        token op = parser->current;
-        advanceParser(parser);
-
-        astNode *right = parseLogicalOr(parser);
-        left = createAssignmentNode(left, right, assignment_op);
     }
     return left;
 }
@@ -486,11 +505,15 @@ astNode *parseImportStatement(parser *parser){
     advanceParser(parser);
 
     if(parser->current.type != string_literal_token) return NULL;
-
-    char *filename = strdup(parser->current.data.properties.value.value.str_value);
+    
+    char *import_name = parser->current.data.properties.value.value.str_value;
+    astNode *name_node = createIdentifierNode(import_name);
+    
     advanceParser(parser);
 
-    return createImportNode(filename);
+    if(parser->current.type == semicolon_token) advanceParser(parser);
+    
+    return createImportNode(name_node); 
 }
 
 astNode *parseFunction(parser *parser){

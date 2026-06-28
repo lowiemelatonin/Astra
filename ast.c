@@ -1,6 +1,7 @@
 #include "ast.h"
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 static astNode *allocNode(nodeType type){
     astNode *node = malloc(sizeof(astNode));
@@ -52,6 +53,7 @@ astNode *createDefineNode(astNode *type, char *identifier, astNode *initializer,
         free(node);
         return NULL;
     }
+    node->define.initializer = initializer;
     node->define.flags = flags;
     return node;
 }
@@ -61,7 +63,7 @@ astNode *createPointerNode(astNode *ptr){
     node->pointer.ptr = ptr;
     
     if(!node->pointer.ptr){
-        free(node->pointer.ptr);
+        free(node);
         return NULL;
     }
     return node;

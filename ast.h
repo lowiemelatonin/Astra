@@ -149,8 +149,6 @@ typedef struct astNode {
             astNode *then_branch;
         } for_stmt;
 
-        struct {} break_stmt, continue_stmt;
-
         struct {
             astNode *value;
         } return_stmt;
@@ -179,6 +177,7 @@ astNode *createBreakNode();
 astNode *createContinueNode();
 astNode *createReturnNode(astNode *value);
 astNode *createImportNode(astNode *identifier);
-void freeAst(astNode *node)
+void printAst(astNode *node, int level);
+void freeAst(astNode *node);
 
 #endif

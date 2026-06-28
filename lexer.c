@@ -172,7 +172,7 @@ token lexIdent(lexer *lexer){
     keyword("double", double_token);
     keyword("string", string_token);
 
-    #undef keyword;
+    #undef keyword
 
     token_data data = {0};
     if(type == identifier_token){
@@ -211,55 +211,56 @@ token nextToken(lexer *lexer){
 
     switch(current){
         case '+':
-            if(peekNext(lexer) == '+') return createToken(lexer, increment_token, (token_data){0}, "++");
+            if(match(lexer, '+')) return createToken(lexer, increment_token, (token_data){0}, "++");
             return createToken(lexer, plus_token, (token_data){0}, "+");
         case '-':
-            if(peekNext(lexer) == '-') return createToken(lexer, decrement_token, (token_data){0}, "--");
-            if(match(lexer, ">")) return createToken(lexer, arrow_token, (token_data){0}, "->");
+            if(match(lexer, '-')) return createToken(lexer, decrement_token, (token_data){0}, "--");
+            if(match(lexer, '>')) return createToken(lexer, arrow_token, (token_data){0}, "->");
             return createToken(lexer, minus_token, (token_data){0}, "-");
         case '*':
-            return createToken(lexer, star_token, (token_data){0}, '*');
+            return createToken(lexer, star_token, (token_data){0}, "*");
         case '/':
-            return createToken(lexer, slash_token, (token_data){0}, '/');
+            return createToken(lexer, slash_token, (token_data){0}, "/");
         case '%':
-            return createToken(lexer, percent_token, (token_data){0}, '%');
+            return createToken(lexer, percent_token, (token_data){0}, "%");
         case '=':
             if(match(lexer, '=')) return createToken(lexer, equal_equal_token, (token_data){0}, "==");
-            return createToken(lexer, equal_token, (token_data){0}, '=');
+            return createToken(lexer, equal_token, (token_data){0}, "=");
         case '!':
             if(match(lexer, '=')) return createToken(lexer, not_equal_token, (token_data){0}, "!=");
-            return createToken(lexer, not_token, (token_data){0}, '!');
+            return createToken(lexer, not_token, (token_data){0}, "!");
         case '>':
             if(match(lexer, '=')) return createToken(lexer, greater_equal_token, (token_data){0}, ">=");
-            return createToken(lexer, greater_token, (token_data){0}, '>');
+            return createToken(lexer, greater_token, (token_data){0}, ">");
         case '<':
             if(match(lexer, '=')) return createToken(lexer, less_equal_token, (token_data){0}, "<=");
-            return createToken(lexer, less_token, (token_data){0}, '<');
+            return createToken(lexer, less_token, (token_data){0}, "<");
         case '&':
             if(match(lexer, '&')) return createToken(lexer, and_token, (token_data){0}, "&&");
-            return createToken(lexer, address_token, (token_data){0}, '&');
+            return createToken(lexer, address_token, (token_data){0}, "&");
         case '|':
-            return createToken(lexer, or_token, (token_data){0}, "||");
+            if(match(lexer, '|')) return createToken(lexer, or_token, (token_data){0}, "||");
+            return createToken(lexer, null_token, (token_data){0}, "");
         case '(':
-            return createToken(lexer, l_paren_token, (token_data){0}, '(');
+            return createToken(lexer, l_paren_token, (token_data){0}, "(");
         case ')':
-            return createToken(lexer, r_paren_token, (token_data){0}, ')');
+            return createToken(lexer, r_paren_token, (token_data){0}, ")");
         case '[':
-            return createToken(lexer, l_bracket_token, (token_data){0}, '[');
+            return createToken(lexer, l_bracket_token, (token_data){0}, "[");
         case ']':
-            return createToken(lexer, r_bracket_token, (token_data){0}, ']');
+            return createToken(lexer, r_bracket_token, (token_data){0}, "]");
         case '{':
-            return createToken(lexer, l_brace_token, (token_data){0}, '{');
+            return createToken(lexer, l_brace_token, (token_data){0}, "{");
         case '}':
-            return createToken(lexer, r_brace_token, (token_data){0}, '}');
+            return createToken(lexer, r_brace_token, (token_data){0}, "}");
         case ',':
-            return createToken(lexer, comma_token, (token_data){0}, ',');
+            return createToken(lexer, comma_token, (token_data){0}, ",");
         case '.':
-            return createToken(lexer, dot_token, (token_data){0}, '.');
+            return createToken(lexer, dot_token, (token_data){0}, ".");
         case ';':
-            return createToken(lexer, semicolon_token, (token_data){0}, ';');
+            return createToken(lexer, semicolon_token, (token_data){0}, ";");
         case ':':
-            return createToken(lexer, colon_token, (token_data){0}, ':');
+            return createToken(lexer, colon_token, (token_data){0}, ":");
         default:
             return createToken(lexer, null_token, (token_data){0}, "");
     }
