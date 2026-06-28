@@ -252,3 +252,74 @@ void freeAst(astNode *node){
     }
     free(node);
 }
+
+void printAst(astNode *node, int level) {
+    if(!node) return;
+
+    for(int i = 0; i < level; i++){
+        printf("  "); 
+    }
+
+    switch (node->type) {
+        case import_node:
+            printf("ImportNode\n");
+            printAst(node->import_stmt.identifier, level + 1); 
+            break;
+            
+        case identifier_node:
+            printf("IdentifierNode: %s\n", node->identifier.name);
+            break;
+            
+        case value_node:
+            printf("ValueNode: ");
+            if(node->data.value.type == type_string){
+                printf("\"%s\"\n", node->data.value.value.str_value);
+            } else if(node->data.value.type == type_int){
+                printf("%d\n", node->data.value.value.i_value);
+            } else if(node->data.value.type == type_double){
+                printf("%f\n", node->data.value.value.d_value);
+            } else {
+                printf("(Outro tipo de valor)\n");
+            }
+            break;
+
+        case body_node:
+            printf("BodyNode\n");
+            for (int i = 0; i < node->body.elements_count; i++) {
+                printAst(node->body.elements[i], level + 1);
+            }
+            break;
+            
+        case if_node:
+            printf("IfNode\n");
+            printAst(node->if_stmt.condition, level + 1);
+            printf("  Then:\n");
+            printAst(node->if_stmt.then_branch, level + 1);
+            if(node->if_stmt.else_branch){
+                printf("  Else:\n");
+                printAst(node->if_stmt.else_branch, level + 1);
+            }
+            break;
+        case define_node:
+            printf("DefineNode: '%s' ", node->define.identifier);
+            
+            if (node->define.flags & const_flag) printf("[const]");
+            if (node->define.flags & static_flag) printf("[static]");
+            printf("\n");
+            
+            for (int i = 0; i < level + 1; i++) printf("  ");
+            printf("Tipo:\n");
+            printAst(node->define.type, level + 1);
+            
+            if (node->define.initializer) {
+                for (int i = 0; i < level + 1; i++) printf("  ");
+                printf("Inicializador:\n");
+                printAst(node->define.initializer, level + 1);
+            }
+            break;
+
+        default:
+            printf("Node de tipo [%d] (Falta implementar o print deste tipo)\n", node->type);
+            break;
+    }
+}

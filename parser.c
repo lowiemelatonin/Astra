@@ -214,6 +214,10 @@ astNode *parseMultiplicative(parser *parser){
         advanceParser(parser);
 
         astNode *right = parseUnary(parser);
+        if(!right){
+            freeAst(left);
+            return NULL;
+        }
 
         opType operation;
         switch(op.type){
@@ -236,6 +240,7 @@ astNode *parseMultiplicative(parser *parser){
 
 astNode *parseAdditive(parser *parser){
     astNode *left = parseMultiplicative(parser);
+    if(!left) return NULL;
 
     while(parser->current.type == plus_token || parser->current.type == minus_token){
         token op = parser->current;
