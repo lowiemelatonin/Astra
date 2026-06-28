@@ -3,6 +3,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <limits.h>
 
 char peek(lexer *lexer){
     return lexer->src[lexer->position];

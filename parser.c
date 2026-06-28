@@ -43,23 +43,65 @@ astNode *parsePrimary(parser *parser){
 
 astNode *parsePostfix(parser *parser){
     astNode *expr = parsePrimary(parser);
-    while(parser->current.type == increment_token || parser->current.type == decrement_token){
-        token op = parser->current;
-        advanceParser(parser);
+    while(parser->current.type == increment_token || parser->current.type == decrement_token || parser->current.type == l_paren_token){
+        if(parser->current.type == l_paren_token){
+            advanceParser(parser);
 
-        opType operation;
-        
-        switch(op.type){
-            case decrement_token:
-                operation = decrement_op;
-                break;
-            case increment_token:
-                operation = increment_op;
-                break;
-            default:
-                return expr;
+            astNode **args = NULL;
+            int count = 0;
+
+            if(parser->current.type != r_paren_token){
+                while(1){
+                    astNode *arg = parseExpression(parser);
+                    if(!arg){
+                        for(int i = 0; i < count; i++) freeAst(args[i]);
+                        free(args);
+                        return NULL;
+                    }
+
+                    astNode **tmp = realloc(args, sizeof(astNode *) * (count + 1));
+                    if(!tmp){
+                        for(int i = 0; i < count; i++) freeAst(args[i]);
+                        free(args);
+                        return NULL;
+                    }
+
+                    args = tmp;
+                    args[count++] = arg;
+
+                    if(parser->current.type == comma_token){
+                        advanceParser(parser);
+                    } else {
+                        break;
+                    }
+                }
+            }
+            if(parser->current.type != r_paren_token){
+                for(int i = 0; i < count; i++) freeAst(args[i]);
+                free(args);
+                return NULL;
+            }
+            advanceParser(parser);
+
+            astNode *args_node = createBodyNode(args, count);
+            expr = createCallNode(expr, args_node);
         }
-        expr = createDataOperationNode(expr, NULL, operation);
+        else {
+            token op = parser->current;
+            advanceParser(parser);
+            opType operation;
+            switch(op.type){
+                case decrement_token:
+                    operation = decrement_op;
+                    break;
+                case increment_token:
+                    operation = increment_op;
+                    break;
+                default:
+                    return expr;
+            }
+            expr = createDataOperationNode(expr, NULL, operation);
+        }
     }
     return expr;
 }
@@ -426,8 +468,131 @@ astNode *parseImportStatement(parser *parser){
     return createImportNode(filename);
 }
 
+astNode *parseFunction(parser *parser){
+    if(parser->current.type != function_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != identifier_token) return NULL;
+    char *func_name = strdup(parser->current.data.identifier);
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token) return NULL;
+    advanceParser(parser);
+
+    astNode *params = parseParamList(parser);
+
+    if(parser->current.type != r_paren_token){
+        free(func_name);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    if(parser->current.type != arrow_token) return NULL;
+    advanceParser(parser);
+
+    astNode *return_type = parseType(parser);
+
+    astNode *body = parseBody(parser);
+
+    return createFunctionNode(func_name, return_type, params, body, 0);
+
+}
+
+astNode *parseParamList(parser *parser){
+    if(parser->current.type == r_paren_token){
+        return createBodyNode(NULL, 0);
+    }
+
+    astNode **params = NULL;
+    int count = 0;
+
+    while(parser->current.type != r_paren_token && parser->current.type != eof_token){
+        if(parser->current.type != identifier_token) return NULL;
+        char *param_name = strdup(parser->current.data.identifier);
+        advanceParser(parser);
+
+        if(parser->current.type != colon_token) return NULL;
+        advanceParser(parser);
+
+        astNode *param_type = parseType(parser);
+        if(!param_type) return NULL;
+
+        astNode *param_node = createDefineNode(param_type, param_name, NULL, 0);
+        free(param_name);
+
+        astNode **tmp = realloc(params, sizeof(astNode *) * (count + 1));
+        if(!tmp) return NULL;
+        params = tmp;
+        params[count++] = param_node;
+
+        if(parser->current.type == comma_token){
+            advanceParser(parser);
+        } else {
+            break;
+        }
+    }
+    return createBodyNode(params, count);
+}
+
+astNode *parseType(parser *parser){
+    token t = parser->current;
+    
+    if(t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token){
+        char *type_name = strdup(t.lexeme);
+        advanceParser(parser);
+        return createIdentifierNode(type_name);
+    }
+
+    return NULL;
+}
+
+astNode *parseFlags(parser *parser){
+    // to-do
+}
+
+// needs to put in parseStatement and do other stuff
+astNode *parseDefineStatement(parser *parser){
+    if(parser->current.type != identifier_token) return NULL;
+    char *identifier = strdup(parser->current.data.identifier);
+    advanceParser(parser);
+
+    if(parser->current.type != colon_token){
+        free(identifier);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *type = parseType(parser);
+    if(!type){
+        free(identifier);
+        return NULL;
+    }
+
+    astNode *initializer = NULL;
+    if(parser->current.type == equal_token){
+        advanceParser(parser);
+        initializer = parseExpression(parser);
+        if(!initializer){
+            free(identifier);
+            freeAst(type);
+            return NULL;
+        }
+    }
+
+    if(parser->current.type != semicolon_token){
+        free(identifier);
+        freeAst(type);
+        if(initializer) freeAst(initializer);
+        return NULL;
+    }
+    advanceParser(parser);
+    return createDefineNode(type, identifier, initializer, 0);
+}
+
 astNode *parseStatement(parser *parser){
     switch(parser->current.type){
+        case function_token:
+            return parseFunction(parser);
         case return_token:
             return parseReturnStatement(parser);
         case continue_token:
@@ -456,3 +621,4 @@ astNode *parseStatement(parser *parser){
         }
     }
 }
+
