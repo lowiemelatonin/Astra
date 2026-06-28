@@ -3,7 +3,7 @@ Everything is under development, and not fully integrated yet.
 The current progress?
 - [x] ast
 - [x] lexer
-- [ ] parser
+- [x] parser
 - [ ] analyzer
 - [ ] interpreter
 ```
