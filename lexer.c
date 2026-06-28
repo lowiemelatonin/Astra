@@ -165,8 +165,8 @@ token lexIdent(lexer *lexer){
     keyword("continue", continue_token);
     keyword("const", const_token);
     keyword("static", static_token);
-    keyword("int", int_token);
 
+    keyword("int", int_token);
     keyword("long", long_token);
     keyword("float", float_token);
     keyword("double", double_token);

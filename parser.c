@@ -22,9 +22,34 @@ astNode *parsePrimary(parser *parser){
         return createValueNode(val);
     }
 
-    if(token.type == identifier_token){
-        char *name = strdup(token.data.identifier);
+    if(token.type == identifier_token || token.type == const_token || token.type == static_token){
+        dataFlags flags = parseFlags(parser);
+
+        if(parser->current.type != identifier_token) return NULL;
+
+        char *name = parser->current.data.identifier;
         advanceParser(parser);
+        
+        if(parser->current.type == colon_token){
+            advanceParser(parser);
+
+            astNode *type = parseType(parser);
+            if(!type){
+                return NULL;
+            }
+
+            astNode *initializer = NULL;
+
+            if(parser->current.type == equal_token){
+                advanceParser(parser);
+                initializer = parseExpression(parser);
+                if(!initializer){
+                    freeAst(type);
+                    return NULL;
+                }
+            }
+            return createDefineNode(type, name, initializer, flags);
+        }
         return createIdentifierNode(name);
     }
 
@@ -542,51 +567,20 @@ astNode *parseType(parser *parser){
         advanceParser(parser);
         return createIdentifierNode(type_name);
     }
-
     return NULL;
 }
 
-astNode *parseFlags(parser *parser){
-    // to-do
-}
-
-// needs to put in parseStatement and do other stuff
-astNode *parseDefineStatement(parser *parser){
-    if(parser->current.type != identifier_token) return NULL;
-    char *identifier = strdup(parser->current.data.identifier);
-    advanceParser(parser);
-
-    if(parser->current.type != colon_token){
-        free(identifier);
-        return NULL;
-    }
-    advanceParser(parser);
-
-    astNode *type = parseType(parser);
-    if(!type){
-        free(identifier);
-        return NULL;
-    }
-
-    astNode *initializer = NULL;
-    if(parser->current.type == equal_token){
-        advanceParser(parser);
-        initializer = parseExpression(parser);
-        if(!initializer){
-            free(identifier);
-            freeAst(type);
-            return NULL;
+dataFlags parseFlags(parser *parser) {
+    dataFlags flags = 0;
+    while (parser->current.type == const_token || parser->current.type == static_token) {
+        if (parser->current.type == const_token) {
+            flags |= const_flag;
+        } else if (parser->current.type == static_token) {
+            flags |= static_flag;
         }
+        advanceParser(parser);
     }
-
-    if(parser->current.type != semicolon_token){
-        free(identifier);
-        freeAst(type);
-        if(initializer) freeAst(initializer);
-        return NULL;
-    }
-    advanceParser(parser);
-    return createDefineNode(type, identifier, initializer, 0);
+    return flags;
 }
 
 astNode *parseStatement(parser *parser){
@@ -621,4 +615,3 @@ astNode *parseStatement(parser *parser){
         }
     }
 }
-
