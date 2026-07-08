@@ -252,3 +252,192 @@ void freeAst(astNode *node){
     }
     free(node);
 }
+
+
+// Isso aqui nn fui euq fiz, é so pra testar
+// Função auxiliar para imprimir a indentação correta baseada no nível da árvore
+static void printIndent(int level) {
+    for (int i = 0; i < level; i++) {
+        printf("  "); // Usa 2 espaços por nível de indentação
+    }
+}
+
+// Função auxiliar para converter o opType em uma string legível
+static const char* getOpString(opType op) {
+    switch(op) {
+        case plus_op: return "+";
+        case increment_op: return "++";
+        case minus_op: return "-";
+        case decrement_op: return "--";
+        case star_op: return "*";
+        case slash_op: return "/";
+        case percent_op: return "%";
+        case and_op: return "&&";
+        case or_op: return "||";
+        case not_op: return "!";
+        case equal_op: return "==";
+        case not_equal_op: return "!=";
+        case less_op: return "<";
+        case greater_op: return ">";
+        case less_or_equal_op: return "<=";
+        case greater_or_equal_op: return ">=";
+        case assignment_op: return "=";
+        case dereference_op: return "* (deref)";
+        case address_op: return "& (address)";
+        default: return "unknown";
+    }
+}
+
+// Implementação principal da função printAst
+void printAst(astNode *node, int level) {
+    if (!node) return;
+
+    printIndent(level);
+
+    switch (node->type) {
+        case identifier_node:
+            printf("Identifier: %s\n", node->identifier.name);
+            break;
+
+        case value_node:
+            printf("Value: ");
+            switch (node->data.value.type) {
+                case type_int:    printf("%d (int)\n", node->data.value.value.i_value); break;
+                case type_long:   printf("%ld (long)\n", node->data.value.value.l_value); break;
+                case type_float:  printf("%f (float)\n", node->data.value.value.f_value); break;
+                case type_double: printf("%lf (double)\n", node->data.value.value.d_value); break;
+                case type_string: printf("\"%s\" (string)\n", node->data.value.value.str_value); break;
+            }
+            break;
+
+        case data_operation_node:
+            printf("Operation: '%s'\n", getOpString(node->operation.op));
+            if (node->operation.left) {
+                printIndent(level + 1); printf("Left:\n");
+                printAst(node->operation.left, level + 2);
+            }
+            if (node->operation.right) {
+                printIndent(level + 1); printf("Right:\n");
+                printAst(node->operation.right, level + 2);
+            }
+            break;
+
+        case assignment_node:
+            printf("Assignment: '%s'\n", getOpString(node->assignment.op));
+            printIndent(level + 1); printf("Left:\n");
+            printAst(node->assignment.left, level + 2);
+            printIndent(level + 1); printf("Right:\n");
+            printAst(node->assignment.right, level + 2);
+            break;
+
+        case define_node:
+            printf("Define (flags: %d): %s\n", node->define.flags, node->define.identifier);
+            printIndent(level + 1); printf("Type:\n");
+            printAst(node->define.type, level + 2);
+            if (node->define.initializer) {
+                printIndent(level + 1); printf("Initializer:\n");
+                printAst(node->define.initializer, level + 2);
+            }
+            break;
+
+        case pointer_node:
+            printf("Pointer:\n");
+            printAst(node->pointer.ptr, level + 1);
+            break;
+
+        case body_node:
+            printf("Body (%d elements):\n", node->body.elements_count);
+            for (int i = 0; i < node->body.elements_count; i++) {
+                printAst(node->body.elements[i], level + 1);
+            }
+            break;
+
+        case array_node:
+            printf("Array:\n");
+            printIndent(level + 1); printf("Type:\n");
+            printAst(node->array.type, level + 2);
+            printIndent(level + 1); printf("Size:\n");
+            printAst(node->array.size, level + 2);
+            printIndent(level + 1); printf("Elements:\n");
+            printAst(node->array.elements, level + 2);
+            break;
+
+        case array_access_node:
+            printf("Array Access: %s\n", node->array_access.identifier);
+            printIndent(level + 1); printf("Index:\n");
+            printAst(node->array_access.index, level + 2);
+            break;
+
+        case function_node:
+            printf("Function: %s (flags: %d)\n", node->function.identifier, node->function.flags);
+            printIndent(level + 1); printf("Return Type:\n");
+            printAst(node->function.return_type, level + 2);
+            printIndent(level + 1); printf("Params:\n");
+            printAst(node->function.params, level + 2);
+            printIndent(level + 1); printf("Body:\n");
+            printAst(node->function.body, level + 2);
+            break;
+
+        case call_node:
+            printf("Call:\n");
+            printIndent(level + 1); printf("Target:\n");
+            printAst(node->call.identifier, level + 2);
+            printIndent(level + 1); printf("Args:\n");
+            printAst(node->call.args, level + 2);
+            break;
+
+        case if_node:
+            printf("If Statement:\n");
+            printIndent(level + 1); printf("Condition:\n");
+            printAst(node->if_stmt.condition, level + 2);
+            printIndent(level + 1); printf("Then Branch:\n");
+            printAst(node->if_stmt.then_branch, level + 2);
+            if (node->if_stmt.else_branch) {
+                printIndent(level + 1); printf("Else Branch:\n");
+                printAst(node->if_stmt.else_branch, level + 2);
+            }
+            break;
+
+        case for_node:
+            printf("For Loop:\n");
+            if (node->for_stmt.initializer) {
+                printIndent(level + 1); printf("Init:\n");
+                printAst(node->for_stmt.initializer, level + 2);
+            }
+            if (node->for_stmt.condition) {
+                printIndent(level + 1); printf("Condition:\n");
+                printAst(node->for_stmt.condition, level + 2);
+            }
+            if (node->for_stmt.increment) {
+                printIndent(level + 1); printf("Increment:\n");
+                printAst(node->for_stmt.increment, level + 2);
+            }
+            printIndent(level + 1); printf("Body:\n");
+            printAst(node->for_stmt.then_branch, level + 2);
+            break;
+
+        case break_node:
+            printf("Break Statement\n");
+            break;
+
+        case continue_node:
+            printf("Continue Statement\n");
+            break;
+
+        case return_node:
+            printf("Return Statement:\n");
+            if (node->return_stmt.value) {
+                printAst(node->return_stmt.value, level + 1);
+            }
+            break;
+
+        case import_node:
+            printf("Import Statement:\n");
+            printAst(node->import_stmt.identifier, level + 1);
+            break;
+
+        default:
+            printf("Unknown Node Type (%d)\n", node->type);
+            break;
+    }
+}

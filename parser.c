@@ -525,6 +525,8 @@ astNode *parseFunction(parser *parser){
     if(parser->current.type != function_token) return NULL;
     advanceParser(parser);
 
+    dataFlags flags = parseFlags(parser);
+
     if(parser->current.type != identifier_token) return NULL;
     char *func_name = strdup(parser->current.data.identifier);
     advanceParser(parser);
@@ -547,7 +549,7 @@ astNode *parseFunction(parser *parser){
 
     astNode *body = parseBody(parser);
 
-    return createFunctionNode(func_name, return_type, params, body, 0);
+    return createFunctionNode(func_name, return_type, params, body, flags);
 
 }
 
@@ -589,11 +591,16 @@ astNode *parseParamList(parser *parser){
 
 astNode *parseType(parser *parser){
     token t = parser->current;
-    
+
     if(t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token){
-        char *type_name = strdup(t.lexeme);
+        astNode *type_node = createIdentifierNode(t.lexeme);
         advanceParser(parser);
-        return createIdentifierNode(type_name);
+
+        while(parser->current.type == star_token) {
+            advanceParser(parser);
+            type_node = createPointerNode(type_node);
+        }
+        return type_node;
     }
     return NULL;
 }
