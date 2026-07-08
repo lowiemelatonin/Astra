@@ -35,10 +35,10 @@ void advanceParser(parser *parser){
 astNode *parseAssignment(parser *parser){
     astNode *left = parseLogicalOr(parser);
 
-    while(parser->current.type == equal_token){
+    if(parser->current.type == equal_token){
         advanceParser(parser);
 
-        astNode *right = parseLogicalOr(parser);
+        astNode *right = parseAssignment(parser);
         left = createAssignmentNode(left, right, assignment_op);
     }
     return left;
@@ -152,7 +152,7 @@ astNode *parsePostfix(parser *parser){
                 return NULL;
             }
 
-            char *member = strdup(parser->current.data.identifier);
+            char *member = parser->current.data.identifier;
             advanceParser(parser);
 
             expr = createMemberAccessNode(expr, member);
@@ -215,7 +215,7 @@ astNode *parseUnary(parser *parser){
 
         return createDataOperationNode(NULL, right, operation);
     }
-    return parsePrimary(parser);
+    return parsePostfix(parser);
 }
 
 astNode *parseMultiplicative(parser *parser){
@@ -604,7 +604,7 @@ astNode *parseParamList(parser *parser){
 astNode *parseType(parser *parser){
     token t = parser->current;
 
-    if(t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token){
+    if(t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == identifier_token){
         astNode *type_node = createIdentifierNode(t.lexeme);
         advanceParser(parser);
 
@@ -620,7 +620,7 @@ astNode *parseType(parser *parser){
 astNode *parseStruct(parser *parser){
     advanceParser(parser);
 
-    if(parser->current.type != identifier_node) return NULL;
+    if(parser->current.type != identifier_token) return NULL;
     char *name = strdup(parser->current.data.identifier);
     advanceParser(parser);
 

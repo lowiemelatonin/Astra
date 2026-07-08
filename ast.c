@@ -261,9 +261,16 @@ void freeAst(astNode *node){
         case import_node:
             freeAst(node->import_stmt.identifier);
             break;
+        case struct_node:
+            free(node->struct_stmt.identifier);
+            freeAst(node->struct_stmt.body);
+            break;
+        case member_access_node:
+            freeAst(node->member_access.object);
+            free(node->member_access.member);
+            break;
         default:
             break;
     }
     free(node);
 }
-
