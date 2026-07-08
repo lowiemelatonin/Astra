@@ -554,15 +554,18 @@ astNode *parseFunction(parser *parser){
     }
     advanceParser(parser);
 
-    if(parser->current.type != arrow_token) return NULL;
-    advanceParser(parser);
-
     astNode *return_type = parseType(parser);
+
+    if(parser->current.type == arrow_token){
+        advanceParser(parser);
+        return_type = parseType(parser);
+    } else {
+        return_type = createIdentifierNode("void");
+    }
 
     astNode *body = parseBody(parser);
 
     return createFunctionNode(func_name, return_type, params, body, flags);
-
 }
 
 astNode *parseParamList(parser *parser){
@@ -604,7 +607,7 @@ astNode *parseParamList(parser *parser){
 astNode *parseType(parser *parser){
     token t = parser->current;
 
-    if(t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == identifier_token){
+    if(t.type == void_token || t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == identifier_token){
         astNode *type_node = createIdentifierNode(t.lexeme);
         advanceParser(parser);
 

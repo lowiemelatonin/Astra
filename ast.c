@@ -274,3 +274,4 @@ void freeAst(astNode *node){
     }
     free(node);
 }
+

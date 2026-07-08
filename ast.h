@@ -2,6 +2,7 @@
 #define AST_H
 
 typedef enum {
+    type_void,
     type_int,
     type_long,
     type_float,
