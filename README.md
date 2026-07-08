@@ -4,7 +4,7 @@ The current progress?
 - [x] ast
 - [x] lexer
 - [x] parser
-- [ ] analyzer
+- [ ] symbol table
 - [ ] interpreter
 ```
 fun add(a: int, b: int) -> int{
