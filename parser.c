@@ -102,7 +102,7 @@ astNode *parsePrimary(parser *parser){
 
 astNode *parsePostfix(parser *parser){
     astNode *expr = parsePrimary(parser);
-    while(parser->current.type == increment_token || parser->current.type == decrement_token || parser->current.type == l_paren_token){
+    while(parser->current.type == increment_token || parser->current.type == decrement_token || parser->current.type == l_paren_token || parser->current.type == dot_token){
         if(parser->current.type == l_paren_token){
             advanceParser(parser);
 
@@ -144,6 +144,18 @@ astNode *parsePostfix(parser *parser){
 
             astNode *args_node = createBodyNode(args, count);
             expr = createCallNode(expr, args_node);
+        }
+        else if(parser->current.type == dot_token){
+            advanceParser(parser);
+
+            if(parser->current.type != identifier_token){
+                return NULL;
+            }
+
+            char *member = strdup(parser->current.data.identifier);
+            advanceParser(parser);
+
+            expr = createMemberAccessNode(expr, member);
         }
         else {
             token op = parser->current;
@@ -605,6 +617,23 @@ astNode *parseType(parser *parser){
     return NULL;
 }
 
+astNode *parseStruct(parser *parser){
+    advanceParser(parser);
+
+    if(parser->current.type != identifier_node) return NULL;
+    char *name = strdup(parser->current.data.identifier);
+    advanceParser(parser);
+
+    astNode *body = parseBody(parser);
+    if(!body){
+        free(name);
+        return NULL;
+    }
+
+    if(parser->current.type == semicolon_token) advanceParser(parser);
+    return createStructNode(name, body);
+}
+
 dataFlags parseFlags(parser *parser) {
     dataFlags flags = 0;
     while (parser->current.type == const_token || parser->current.type == static_token) {
@@ -619,7 +648,16 @@ dataFlags parseFlags(parser *parser) {
 }
 
 astNode *parseStatement(parser *parser){
+    while (parser->current.type == semicolon_token) {
+        advanceParser(parser);
+    }
+
+    if (parser->current.type == r_brace_token || parser->current.type == eof_token) {
+        return NULL;
+    }
     switch(parser->current.type){
+        case struct_token:
+            return parseStruct(parser);
         case function_token:
             return parseFunction(parser);
         case return_token:

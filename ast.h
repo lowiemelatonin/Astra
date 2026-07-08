@@ -68,7 +68,9 @@ typedef enum {
     break_node,
     continue_node,
     return_node,
-    import_node
+    import_node,
+    struct_node,
+    member_access_node
 } nodeType;
 
 typedef struct astNode astNode;
@@ -157,6 +159,16 @@ typedef struct astNode {
             astNode *identifier;
         } import_stmt;
 
+        struct {
+            char *identifier;
+            astNode *body;
+        } struct_stmt;
+
+        struct {
+            astNode *object;
+            char *member;
+        } member_access;
+
     };
 } astNode;
 
@@ -177,6 +189,8 @@ astNode *createBreakNode();
 astNode *createContinueNode();
 astNode *createReturnNode(astNode *value);
 astNode *createImportNode(astNode *identifier);
+astNode *createStructNode(char *identifier, astNode *body);
+astNode *createMemberAccessNode(astNode *object, char *member);
 void printAst(astNode *node, int level);
 void freeAst(astNode *node);
 

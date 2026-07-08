@@ -16,6 +16,7 @@ typedef enum {
     double_token,           // double
     string_token,           // string
     string_literal_token,   // "dolor sit"
+    struct_token,           // struct
     plus_token,             // +
     increment_token,        // ++
     minus_token,            // -
@@ -36,7 +37,6 @@ typedef enum {
     if_token,               // if
     else_token,             // else
     for_token,              // for
-    define_token,           // define
     import_token,           // import
     function_token,         // fun
     return_token,           // return

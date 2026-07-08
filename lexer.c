@@ -155,7 +155,6 @@ token lexIdent(lexer *lexer){
     keyword("if", if_token);
     keyword("else", else_token);
     keyword("for", for_token);
-    keyword("define", define_token);
 
     keyword("import", import_token);
     keyword("fun", function_token);
@@ -171,6 +170,7 @@ token lexIdent(lexer *lexer){
     keyword("float", float_token);
     keyword("double", double_token);
     keyword("string", string_token);
+    keyword("struct", struct_token);
 
     #undef keyword
 
