@@ -5,7 +5,7 @@ The current progress?
 - [x] lexer
 - [x] parser
 - [ ] symbol table
-- [ ] interpreter
+- [ ] compiler
 ```
 fun add(a: int, b: int) -> int{
   return a + b;
