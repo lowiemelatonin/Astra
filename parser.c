@@ -17,6 +17,8 @@ astNode *parseBreakStatement(parser *parser);
 astNode *parseBody(parser *parser);
 astNode *parseIfStatement(parser *parser);
 astNode *parseForStatement(parser *parser);
+astNode *parseWhileStatement(parser *parser);
+astNode *parseDoWhileStatement(parser *parser);
 astNode *parseImportStatement(parser *parser);
 astNode *parseFunction(parser *parser);
 astNode *parseStruct(parser *parser);
@@ -542,6 +544,73 @@ astNode *parseForStatement(parser *parser){
     return createForNode(initializer, condition, increment, then_branch);
 }
 
+astNode *parseWhileStatement(parser *parser){
+    if(parser->current.type != while_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token) return NULL;
+    advanceParser(parser);
+
+    astNode *condition = parseExpression(parser);
+    if(!condition) return NULL;
+
+    if(parser->current.type != r_paren_token){
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *then_branch = parseStatement(parser);
+    if(!then_branch){
+        freeAst(condition);
+        return NULL;
+    }
+
+    return createWhileNode(condition, then_branch);
+}
+
+astNode *parseDoWhileStatement(parser *parser){
+    if(parser->current.type != do_token) return NULL;
+    advanceParser(parser);
+
+    astNode *body = parseStatement(parser);
+    if(!body) return NULL;
+
+    if(parser->current.type != while_token){
+        freeAst(body);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token){
+        freeAst(body);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *condition = parseExpression(parser);
+    if(!condition){
+        freeAst(body);
+        return NULL;
+    }
+
+    if(parser->current.type != r_paren_token){
+        freeAst(body);
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    if(parser->current.type != semicolon_token){
+        freeAst(body);
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    return createDoWhileNode(body, condition);
+}
+
 astNode *parseImportStatement(parser *parser){
     if(parser->current.type != import_token) return NULL;
     advanceParser(parser);
@@ -857,6 +926,10 @@ astNode *parseStatement(parser *parser){
             return parseIfStatement(parser);
         case for_token:
             return parseForStatement(parser);
+        case while_token:
+            return parseWhileStatement(parser);
+        case do_token:
+            return parseDoWhileStatement(parser);
         case import_token:
             return parseImportStatement(parser);
         default: {

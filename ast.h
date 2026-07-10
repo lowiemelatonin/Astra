@@ -74,6 +74,8 @@ typedef enum {
     data_operation_node,
     if_node,
     for_node,
+    while_node,
+    do_while_node,
     break_node,
     continue_node,
     return_node,
@@ -163,6 +165,16 @@ typedef struct astNode {
         } for_stmt;
 
         struct {
+            astNode *condition;
+            astNode *then_branch;
+        } while_stmt;
+
+        struct {
+            astNode *body;
+            astNode *condition;
+        } do_while_stmt;
+
+        struct {
             astNode *value;
         } return_stmt;
 
@@ -206,6 +218,8 @@ astNode *createCallNode(astNode *identifier, astNode *args);
 astNode *createDataOperationNode(astNode *left, astNode *right, opType op);
 astNode *createIfNode(astNode *condition, astNode *then_branch, astNode *else_branch);
 astNode *createForNode(astNode *initializer, astNode *condition, astNode *increment, astNode *then_branch);
+astNode *createWhileNode(astNode *condition, astNode *then_branch);
+astNode *createDoWhileNode(astNode *body, astNode *condition);
 astNode *createBreakNode();
 astNode *createContinueNode();
 astNode *createReturnNode(astNode *value);

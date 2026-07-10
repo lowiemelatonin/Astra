@@ -48,6 +48,8 @@ typedef enum {
     if_token,                   // if
     else_token,                 // else
     for_token,                  // for
+    while_token,                // while
+    do_token,                   // do
     import_token,               // import
     function_token,             // fun
     return_token,               // return

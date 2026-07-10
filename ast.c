@@ -151,6 +151,20 @@ astNode *createForNode(astNode *initializer, astNode *condition, astNode *increm
     return node;
 }
 
+astNode *createWhileNode(astNode *condition, astNode *then_branch){
+    astNode *node = allocNode(while_node);
+    node->while_stmt.condition = condition;
+    node->while_stmt.then_branch = then_branch;
+    return node;
+}
+
+astNode *createDoWhileNode(astNode *body, astNode *condition){
+    astNode *node = allocNode(do_while_node);
+    node->do_while_stmt.body = body;
+    node->do_while_stmt.condition = condition;
+    return node;
+}
+
 astNode *createBreakNode(){
     astNode *node = allocNode(break_node);
     return node;
@@ -265,6 +279,14 @@ void freeAst(astNode *node){
             freeAst(node->for_stmt.increment);
             freeAst(node->for_stmt.then_branch);
             break;
+        case while_node:
+            freeAst(node->while_stmt.condition);
+            freeAst(node->while_stmt.then_branch);
+            break;
+        case do_while_node:
+            freeAst(node->do_while_stmt.body);
+            freeAst(node->do_while_stmt.condition);
+            break;
         case break_node:
             break;
         case continue_node:
@@ -296,3 +318,4 @@ void freeAst(astNode *node){
     }
     free(node);
 }
+

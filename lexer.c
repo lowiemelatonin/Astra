@@ -161,6 +161,8 @@ token lexIdent(lexer *lexer){
     keyword("if", if_token);
     keyword("else", else_token);
     keyword("for", for_token);
+    keyword("while", while_token);
+    keyword("do", do_token);
 
     keyword("import", import_token);
     keyword("fun", function_token);
