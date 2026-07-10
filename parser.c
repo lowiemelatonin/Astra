@@ -122,10 +122,10 @@ astNode *parsePrimary(parser *parser) {
 
     return NULL;
 }
-
 astNode *parsePostfix(parser *parser){
     astNode *expr = parsePrimary(parser);
-    while(parser->current.type == increment_token || parser->current.type == decrement_token || parser->current.type == l_paren_token || parser->current.type == dot_token){
+    
+    while(parser->current.type == increment_token || parser->current.type == decrement_token || parser->current.type == l_paren_token || parser->current.type == dot_token || parser->current.type == arrow_token){
         if(parser->current.type == l_paren_token){
             advanceParser(parser);
 
@@ -169,17 +169,23 @@ astNode *parsePostfix(parser *parser){
             free(args);
             expr = createCallNode(expr, args_node);
         }
-        else if(parser->current.type == dot_token){
+        else if(parser->current.type == dot_token || parser->current.type == arrow_token){
+            token_type op_type = parser->current.type;
             advanceParser(parser);
 
             if(parser->current.type != identifier_token){
+                freeAst(expr);
                 return NULL;
             }
 
             char *member = strdup(parser->current.data.identifier);
             advanceParser(parser);
 
-            expr = createMemberAccessNode(expr, member);
+            if (op_type == arrow_token) {
+                expr = createArrowAccessNode(expr, member);
+            } else {
+                expr = createDotAccessNode(expr, member);
+            }
             free(member);
         }
         else {

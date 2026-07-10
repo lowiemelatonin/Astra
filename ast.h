@@ -81,7 +81,8 @@ typedef enum {
     return_node,
     import_node,
     struct_node,
-    member_access_node,
+    dot_access_node,
+    arrow_access_node,
     enum_node,
     union_node
 } nodeType;
@@ -190,7 +191,12 @@ typedef struct astNode {
         struct {
             astNode *object;
             char *member;
-        } member_access;
+        } dot_access;
+
+        struct {
+            astNode *object;
+            char *member;
+        } arrow_access;
 
         struct {
             char *identifier;
@@ -225,7 +231,8 @@ astNode *createContinueNode();
 astNode *createReturnNode(astNode *value);
 astNode *createImportNode(astNode *identifier);
 astNode *createStructNode(char *identifier, astNode *body);
-astNode *createMemberAccessNode(astNode *object, char *member);
+astNode *createDotAccessNode(astNode *object, char *member);
+astNode *createArrowAccessNode(astNode *object, char *member);
 astNode *createEnumNode(char *identifier, astNode *body);
 astNode *createUnionNode(char *identifier, astNode *body);
 

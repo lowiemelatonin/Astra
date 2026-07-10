@@ -194,10 +194,29 @@ astNode *createStructNode(char *identifier, astNode *body){
     return node;
 }
 
-astNode *createMemberAccessNode(astNode *object, char *member){
-    astNode *node = allocNode(member_access_node);
-    node->member_access.object = object;
-    node->member_access.member = strdup(member);
+astNode *createDotAccessNode(astNode *object, char *member) {
+    astNode *node = allocNode(dot_access_node);
+    if (!node) return NULL;
+    
+    node->dot_access.object = object;
+    node->dot_access.member = strdup(member);
+    if (!node->dot_access.member) {
+        free(node);
+        return NULL;
+    }
+    return node;
+}
+
+astNode *createArrowAccessNode(astNode *object, char *member) {
+    astNode *node = allocNode(arrow_access_node);
+    if (!node) return NULL;
+    
+    node->arrow_access.object = object;
+    node->arrow_access.member = strdup(member);
+    if (!node->arrow_access.member) {
+        free(node);
+        return NULL;
+    }
     return node;
 }
 
@@ -301,9 +320,13 @@ void freeAst(astNode *node){
             free(node->struct_stmt.identifier);
             freeAst(node->struct_stmt.body);
             break;
-        case member_access_node:
-            freeAst(node->member_access.object);
-            free(node->member_access.member);
+        case dot_access_node:
+            freeAst(node->dot_access.object);
+            free(node->dot_access.member);
+            break;
+        case arrow_access_node:
+            freeAst(node->arrow_access.object);
+            free(node->arrow_access.member);
             break;
         case enum_node:
             free(node->enum_stmt.identifier);
