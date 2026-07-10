@@ -4,61 +4,69 @@
 #include "ast.h"
 
 typedef enum {
-    identifier_token,       // lorem_isum
-    const_token,            // const
-    static_token,           // static
-    void_token,             // void
-    int_token,              // int
-    int_literal_token,      // 0, 1, 2, 3...
-    long_token,             // long
-    long_literal_token,     // 100000000000000000000...
-    float_token,            // float
-    float_literal_token,    // 3.14...
-    double_token,           // double
-    string_token,           // string
-    string_literal_token,   // "dolor sit"
-    struct_token,           // struct
-    enum_token,             // enum
-    union_token,            // union
-    plus_token,             // +
-    increment_token,        // ++
-    minus_token,            // -
-    decrement_token,        // --
-    star_token,             // *
-    slash_token,            // /
-    percent_token,          // %
-    and_token,              // &&
-    or_token,               // ||
-    not_token,              // !
-    equal_token,            // =
-    equal_equal_token,      // ==
-    not_equal_token,        // !=
-    less_token,             // <
-    less_equal_token,       // <=
-    greater_token,          // >
-    greater_equal_token,    // >=
-    if_token,               // if
-    else_token,             // else
-    for_token,              // for
-    import_token,           // import
-    function_token,         // fun
-    return_token,           // return
-    break_token,            // break
-    continue_token,         // continue
-    l_paren_token,          // (
-    r_paren_token,          // )
-    l_bracket_token,        // [
-    r_bracket_token,        // ]
-    l_brace_token,          // {
-    r_brace_token,          // }
-    quote_token,            // '
-    double_quote_token,     // "
-    comma_token,            // ,
-    semicolon_token,        // ;
-    colon_token,            // :
-    address_token,          // &
-    dot_token,              // .
-    arrow_token,            // ->
+    identifier_token,           // lorem_isum
+    const_token,                // const
+    static_token,               // static
+    void_token,                 // void
+    bool_token,                 // bool
+    true_token,                 // true
+    false_token,                // false
+    short_token,                // short
+    short_literal_token,        // 2 bytes
+    int_token,                  // int
+    int_literal_token,          // 0, 1, 2, 3...
+    long_token,                 // long
+    long_literal_token,         // 100000000000000000...
+    long_long_token,            // long long
+    long_long_literal_token,    // 10000000000000000000000...
+    float_token,                // float
+    float_literal_token,        // 3.14...
+    double_token,               // double
+    long_double_literal_token,  // 3.1415...
+    string_token,               // string
+    string_literal_token,       // "dolor sit"
+    struct_token,               // struct
+    enum_token,                 // enum
+    union_token,                // union
+    plus_token,                 // +
+    increment_token,            // ++
+    minus_token,                // -
+    decrement_token,            // --
+    star_token,                 // *
+    slash_token,                // /
+    percent_token,              // %
+    and_token,                  // &&
+    or_token,                   // ||
+    not_token,                  // !
+    equal_token,                // =
+    equal_equal_token,          // ==
+    not_equal_token,            // !=
+    less_token,                 // <
+    less_equal_token,           // <=
+    greater_token,              // >
+    greater_equal_token,        // >=
+    if_token,                   // if
+    else_token,                 // else
+    for_token,                  // for
+    import_token,               // import
+    function_token,             // fun
+    return_token,               // return
+    break_token,                // break
+    continue_token,             // continue
+    l_paren_token,              // (
+    r_paren_token,              // )
+    l_bracket_token,            // [
+    r_bracket_token,            // ]
+    l_brace_token,              // {
+    r_brace_token,              // }
+    quote_token,                // '
+    double_quote_token,         // "
+    comma_token,                // ,
+    semicolon_token,            // ;
+    colon_token,                // :
+    address_token,              // &
+    dot_token,                  // .
+    arrow_token,                // ->
     null_token,
     eof_token
 } token_type;
@@ -87,7 +95,7 @@ typedef struct {
     int column;
 } token;
 
-token createToken(lexer *lexer, token_type type, token_data data, char *lexeme);
+token createToken(lexer *lexer, token_type type, token_data *data, char *lexeme);
 token nextToken(lexer *lexer);
 void initLexer(lexer *lexer, char *src);
 void freeLexer(lexer *lexer);

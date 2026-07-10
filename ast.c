@@ -22,18 +22,18 @@ astNode *createIdentifierNode(char *name){
     return node;
 }
 
-astNode *createValueNode(dataValue value){
+astNode *createValueNode(dataValue *value){
     astNode *node = allocNode(value_node);
     dataValue *val = &node->data.value;
 
-    if(value.type == type_string){
+    if(value->type == type_string){
         val->type = type_string;
-        val->value.str_value = strdup(value.value.str_value);
+        val->value.str_value = strdup(value->value.str_value);
         if(!val->value.str_value){
             free(node);
             return NULL;
         }
-    } else *val = value;
+    } else *val = *value;
     return node;
 }
 

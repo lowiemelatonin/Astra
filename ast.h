@@ -3,20 +3,28 @@
 
 typedef enum {
     type_void,
+    type_bool,
+    type_short,
     type_int,
     type_long,
+    type_long_long,
     type_float,
     type_double,
+    type_long_double,
     type_string
 } dataType;
 
 typedef struct {
     dataType type;
     union {
+        int b_value;
+        short s_value;
         int i_value;
         long l_value;
+        long long ll_value;
         float f_value;
         double d_value;
+        long double ld_value;
         char* str_value;
     } value;
 } dataValue;
@@ -186,7 +194,7 @@ typedef struct astNode {
 } astNode;
 
 astNode *createIdentifierNode(char *name);
-astNode *createValueNode(dataValue value);
+astNode *createValueNode(dataValue *value);
 astNode *createAssignmentNode(astNode *left, astNode *right, opType op);
 astNode *createDefineNode(astNode *type, char *identifier, astNode *initializer, dataFlags flags);
 astNode *createPointerNode(astNode *pointer);

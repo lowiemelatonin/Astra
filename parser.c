@@ -32,6 +32,7 @@ void initParser(parser *parser, lexer *lexer){
 }
 
 void advanceParser(parser *parser){
+    freeToken(&parser->current);
     parser->current = nextToken(parser->lexer);
 }
 
@@ -51,49 +52,66 @@ astNode *parseExpression(parser *parser){
     return parseAssignment(parser);
 }
 
-astNode *parsePrimary(parser *parser){
+astNode *parsePrimary(parser *parser) {
     token token = parser->current;
 
-    if(token.type == int_literal_token || token.type == long_literal_token || token.type == float_literal_token || token.type == string_literal_token){
-        dataValue val = token.data.properties.value;
-        advanceParser(parser);
-        return createValueNode(val);
-    }
-
-    if(token.type == identifier_token || token.type == const_token || token.type == static_token){
+    if (token.type == identifier_token || token.type == const_token || token.type == static_token) {
         dataFlags flags = parseFlags(parser);
-        if(parser->current.type != identifier_token) return NULL;
+        
+        if (parser->current.type != identifier_token) {
+            return NULL;
+        }
 
-        char *name = parser->current.data.identifier;
+        char *name = strdup(parser->current.data.identifier);
         advanceParser(parser);
         
-        if(parser->current.type == colon_token){
+        if (parser->current.type == colon_token) {
             advanceParser(parser);
 
             astNode *type = parseType(parser);
-            if(!type){
+            if (!type) {
+                free(name);
                 return NULL;
             }
 
             astNode *initializer = NULL;
-
-            if(parser->current.type == equal_token){
+            if (parser->current.type == equal_token) {
                 advanceParser(parser);
                 initializer = parseExpression(parser);
-                if(!initializer){
+                if (!initializer) {
                     freeAst(type);
+                    free(name);
                     return NULL;
                 }
             }
-            return createDefineNode(type, name, initializer, flags);
+
+            astNode *node = createDefineNode(type, name, initializer, flags);
+            
+            free(name); 
+            return node;
         }
-        return createIdentifierNode(name);
+        
+        astNode *node = createIdentifierNode(name);
+        
+        free(name); 
+        return node;
     }
 
-    if(token.type == l_paren_token){
+    if (token.type == short_literal_token || token.type == int_literal_token || 
+        token.type == long_literal_token || token.type == long_long_literal_token ||
+        token.type == float_literal_token || token.type == long_double_literal_token || 
+        token.type == string_literal_token || token.type == true_token || token.type == false_token) {
+        
+        astNode *node = createValueNode(&token.data.properties.value);
+        advanceParser(parser);
+        return node;
+    }
+
+    if (token.type == l_paren_token) {
         advanceParser(parser);
         astNode *expr = parseExpression(parser);
-        if(parser->current.type != r_paren_token){
+        if (parser->current.type != r_paren_token) {
+            if (expr) freeAst(expr);
             return NULL;
         }
         advanceParser(parser);
@@ -146,6 +164,7 @@ astNode *parsePostfix(parser *parser){
             advanceParser(parser);
 
             astNode *args_node = createBodyNode(args, count);
+            free(args);
             expr = createCallNode(expr, args_node);
         }
         else if(parser->current.type == dot_token){
@@ -155,10 +174,11 @@ astNode *parsePostfix(parser *parser){
                 return NULL;
             }
 
-            char *member = parser->current.data.identifier;
+            char *member = strdup(parser->current.data.identifier);
             advanceParser(parser);
 
             expr = createMemberAccessNode(expr, member);
+            free(member);
         }
         else {
             token op = parser->current;
@@ -421,7 +441,9 @@ astNode *parseBody(parser *parser){
     }
 
     advanceParser(parser);
-    return createBodyNode(elements, count);
+    astNode *body = createBodyNode(elements, count);
+    free(elements);
+    return body;
 }
 
 astNode *parseIfStatement(parser *parser){
@@ -568,8 +590,9 @@ astNode *parseFunction(parser *parser){
 
     astNode *body = parseBody(parser);
 
-    return createFunctionNode(func_name, return_type, params, body, flags);
-}
+    astNode *node = createFunctionNode(func_name, return_type, params, body, flags);
+    free(func_name);
+    return node;}
 
 astNode *parseParamList(parser *parser){
     if(parser->current.type == r_paren_token){
@@ -580,21 +603,44 @@ astNode *parseParamList(parser *parser){
     int count = 0;
 
     while(parser->current.type != r_paren_token && parser->current.type != eof_token){
-        if(parser->current.type != identifier_token) return NULL;
+        if(parser->current.type != identifier_token) {
+            for(int i = 0; i < count; i++) freeAst(params[i]);
+            free(params);
+            return NULL;
+        }
+        
         char *param_name = strdup(parser->current.data.identifier);
         advanceParser(parser);
 
-        if(parser->current.type != colon_token) return NULL;
+        if(parser->current.type != colon_token) {
+            free(param_name);
+            for(int i = 0; i < count; i++) freeAst(params[i]);
+            free(params);
+            return NULL;
+        }
         advanceParser(parser);
 
         astNode *param_type = parseType(parser);
-        if(!param_type) return NULL;
+        
+        if(!param_type) {
+            free(param_name);
+            for(int i = 0; i < count; i++) freeAst(params[i]);
+            free(params);
+            return NULL;
+        }
 
         astNode *param_node = createDefineNode(param_type, param_name, NULL, 0);
         free(param_name);
 
         astNode **tmp = realloc(params, sizeof(astNode *) * (count + 1));
-        if(!tmp) return NULL;
+        
+        if(!tmp) {
+            freeAst(param_node); 
+            for(int i = 0; i < count; i++) freeAst(params[i]);
+            free(params);
+            return NULL;
+        }
+        
         params = tmp;
         params[count++] = param_node;
 
@@ -604,7 +650,11 @@ astNode *parseParamList(parser *parser){
             break;
         }
     }
-    return createBodyNode(params, count);
+    
+    astNode *body = createBodyNode(params, count);
+    free(params);
+    
+    return body;
 }
 
 astNode *parseType(parser *parser){
@@ -621,10 +671,26 @@ astNode *parseType(parser *parser){
         type_node = parseEnum(parser);
     } 
 
-    else if(t.type == void_token || t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == identifier_token){
+    else if(t.type == void_token || t.type == short_token || t.type == int_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == bool_token || t.type == identifier_token){
         
         type_node = createIdentifierNode(t.lexeme);
         advanceParser(parser);
+    }
+
+    else if(t.type == long_token){
+        advanceParser(parser);
+        
+        if (parser->current.type == long_token) {
+            type_node = createIdentifierNode("long long");
+            advanceParser(parser);
+        } 
+        else if (parser->current.type == double_token) {
+            type_node = createIdentifierNode("long double");
+            advanceParser(parser);
+        } 
+        else {
+            type_node = createIdentifierNode("long");
+        }
     }
 
     if(type_node){
@@ -720,7 +786,6 @@ astNode *parseEnum(parser *parser){
             free(elements);
             if(name) free(name);
             freeAst(member_node);
-            freeAst(type_node);
             return NULL; 
         }
 
@@ -744,6 +809,8 @@ astNode *parseEnum(parser *parser){
 
     astNode *body = createBodyNode(elements, count);
     astNode *node = createEnumNode(name, body);
+
+    free(elements);
     if(name) free(name);
     return node;
 }

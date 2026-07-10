@@ -46,10 +46,10 @@ bool match(lexer *lexer, char expected){
     return true;
 }
 
-token createToken(lexer *lexer, token_type type, token_data data, char *lexeme){
+token createToken(lexer *lexer, token_type type, token_data *data, char *lexeme){
     token token;
     token.type = type;
-    token.data = data;
+    token.data = *data;
     token.line = lexer->line;
     token.column = lexer->column;
     token.lexeme = strdup(lexeme);
@@ -80,7 +80,7 @@ token lexNums(lexer *lexer){
 
     long long len = lexer->position - start;
     char *numStr = malloc(len + 1);
-    if(!numStr) return createToken(lexer, null_token, (token_data){0}, ""); 
+    if(!numStr) return createToken(lexer, null_token, &(token_data){0}, ""); 
     memcpy(numStr, &lexer->src[start], len);
     numStr[len] = '\0';
 
@@ -91,17 +91,22 @@ token lexNums(lexer *lexer){
         double val = strtod(numStr, NULL);
         data.properties.value.type = type_double;
         data.properties.value.value.d_value = val;
-        token = createToken(lexer, float_literal_token, data, numStr);
+        token = createToken(lexer, float_literal_token, &data, numStr);
     } else {
-        long val = strtol(numStr, NULL, 10);
+        long long val = strtoll(numStr, NULL, 10);
+        
         if(val >= INT_MIN && val <= INT_MAX){
             data.properties.value.type = type_int;
             data.properties.value.value.i_value = (int)val;
-            token = createToken(lexer, int_literal_token, data, numStr);
-        } else {
+            token = createToken(lexer, int_literal_token, &data, numStr);
+        } else if(val >= LONG_MIN && val <= LONG_MAX){
             data.properties.value.type = type_long;
             data.properties.value.value.l_value = (long)val;
-            token = createToken(lexer, long_literal_token, data, numStr);
+            token = createToken(lexer, long_literal_token, &data, numStr);
+        } else {
+            data.properties.value.type = type_long_long;
+            data.properties.value.value.ll_value = val;
+            token = createToken(lexer, long_long_literal_token, &data, numStr);
         }
     }
     free(numStr);
@@ -117,13 +122,13 @@ token lexStr(lexer *lexer){
     }
 
     if(isAtEnd(lexer)){
-        return createToken(lexer, null_token, (token_data){0}, "");
+        return createToken(lexer, null_token, &(token_data){0}, "");
     }
 
     advance(lexer);
     long long len = lexer->position - start - 1;
     char *str = malloc(len + 1);
-    if(!str) return createToken(lexer, null_token, (token_data){0}, "");
+    if(!str) return createToken(lexer, null_token, &(token_data){0}, "");
 
     memcpy(str, &lexer->src[start], len);
     str[len] = '\0';
@@ -132,7 +137,8 @@ token lexStr(lexer *lexer){
     data.properties.value.type = type_string;
     data.properties.value.value.str_value = strdup(str);
 
-    token token = createToken(lexer, string_literal_token, data, str);
+    token token = createToken(lexer, string_literal_token, &data, str);
+    free(str);
     return token;
 }
 
@@ -144,7 +150,7 @@ token lexIdent(lexer *lexer){
 
     long long len = lexer->position - start;
     char *text = malloc(len + 1);
-    if(!text) return createToken(lexer, null_token, (token_data){0}, "");
+    if(!text) return createToken(lexer, null_token, &(token_data){0}, "");
 
     memcpy(text, &lexer->src[start], len);
     text[len] = '\0';
@@ -165,6 +171,11 @@ token lexIdent(lexer *lexer){
     keyword("const", const_token);
     keyword("static", static_token);
 
+    keyword("bool", bool_token);
+    keyword("true", true_token);
+    keyword("false", false_token);
+
+    keyword("short", short_token);
     keyword("int", int_token);
     keyword("long", long_token);
     keyword("float", float_token);
@@ -181,7 +192,7 @@ token lexIdent(lexer *lexer){
         data.identifier = strdup(text);
     }
 
-    token token = createToken(lexer, type, data, text);
+    token token = createToken(lexer, type, &data, text);
     free(text);
     return token;
 }
@@ -190,7 +201,7 @@ token nextToken(lexer *lexer){
     skipWhiteSpace(lexer);
 
     if(isAtEnd(lexer)){
-        return createToken(lexer, eof_token, (token_data){0}, "");
+        return createToken(lexer, eof_token, &(token_data){0}, "");
     }
 
     char current = advance(lexer);
@@ -213,58 +224,58 @@ token nextToken(lexer *lexer){
 
     switch(current){
         case '+':
-            if(match(lexer, '+')) return createToken(lexer, increment_token, (token_data){0}, "++");
-            return createToken(lexer, plus_token, (token_data){0}, "+");
+            if(match(lexer, '+')) return createToken(lexer, increment_token, &(token_data){0}, "++");
+            return createToken(lexer, plus_token, &(token_data){0}, "+");
         case '-':
-            if(match(lexer, '-')) return createToken(lexer, decrement_token, (token_data){0}, "--");
-            if(match(lexer, '>')) return createToken(lexer, arrow_token, (token_data){0}, "->");
-            return createToken(lexer, minus_token, (token_data){0}, "-");
+            if(match(lexer, '-')) return createToken(lexer, decrement_token, &(token_data){0}, "--");
+            if(match(lexer, '>')) return createToken(lexer, arrow_token, &(token_data){0}, "->");
+            return createToken(lexer, minus_token, &(token_data){0}, "-");
         case '*':
-            return createToken(lexer, star_token, (token_data){0}, "*");
+            return createToken(lexer, star_token, &(token_data){0}, "*");
         case '/':
-            return createToken(lexer, slash_token, (token_data){0}, "/");
+            return createToken(lexer, slash_token, &(token_data){0}, "/");
         case '%':
-            return createToken(lexer, percent_token, (token_data){0}, "%");
+            return createToken(lexer, percent_token, &(token_data){0}, "%");
         case '=':
-            if(match(lexer, '=')) return createToken(lexer, equal_equal_token, (token_data){0}, "==");
-            return createToken(lexer, equal_token, (token_data){0}, "=");
+            if(match(lexer, '=')) return createToken(lexer, equal_equal_token, &(token_data){0}, "==");
+            return createToken(lexer, equal_token, &(token_data){0}, "=");
         case '!':
-            if(match(lexer, '=')) return createToken(lexer, not_equal_token, (token_data){0}, "!=");
-            return createToken(lexer, not_token, (token_data){0}, "!");
+            if(match(lexer, '=')) return createToken(lexer, not_equal_token, &(token_data){0}, "!=");
+            return createToken(lexer, not_token, &(token_data){0}, "!");
         case '>':
-            if(match(lexer, '=')) return createToken(lexer, greater_equal_token, (token_data){0}, ">=");
-            return createToken(lexer, greater_token, (token_data){0}, ">");
+            if(match(lexer, '=')) return createToken(lexer, greater_equal_token, &(token_data){0}, ">=");
+            return createToken(lexer, greater_token, &(token_data){0}, ">");
         case '<':
-            if(match(lexer, '=')) return createToken(lexer, less_equal_token, (token_data){0}, "<=");
-            return createToken(lexer, less_token, (token_data){0}, "<");
+            if(match(lexer, '=')) return createToken(lexer, less_equal_token, &(token_data){0}, "<=");
+            return createToken(lexer, less_token, &(token_data){0}, "<");
         case '&':
-            if(match(lexer, '&')) return createToken(lexer, and_token, (token_data){0}, "&&");
-            return createToken(lexer, address_token, (token_data){0}, "&");
+            if(match(lexer, '&')) return createToken(lexer, and_token, &(token_data){0}, "&&");
+            return createToken(lexer, address_token, &(token_data){0}, "&");
         case '|':
-            if(match(lexer, '|')) return createToken(lexer, or_token, (token_data){0}, "||");
-            return createToken(lexer, null_token, (token_data){0}, "");
+            if(match(lexer, '|')) return createToken(lexer, or_token, &(token_data){0}, "||");
+            return createToken(lexer, null_token, &(token_data){0}, "");
         case '(':
-            return createToken(lexer, l_paren_token, (token_data){0}, "(");
+            return createToken(lexer, l_paren_token, &(token_data){0}, "(");
         case ')':
-            return createToken(lexer, r_paren_token, (token_data){0}, ")");
+            return createToken(lexer, r_paren_token, &(token_data){0}, ")");
         case '[':
-            return createToken(lexer, l_bracket_token, (token_data){0}, "[");
+            return createToken(lexer, l_bracket_token, &(token_data){0}, "[");
         case ']':
-            return createToken(lexer, r_bracket_token, (token_data){0}, "]");
+            return createToken(lexer, r_bracket_token, &(token_data){0}, "]");
         case '{':
-            return createToken(lexer, l_brace_token, (token_data){0}, "{");
+            return createToken(lexer, l_brace_token, &(token_data){0}, "{");
         case '}':
-            return createToken(lexer, r_brace_token, (token_data){0}, "}");
+            return createToken(lexer, r_brace_token, &(token_data){0}, "}");
         case ',':
-            return createToken(lexer, comma_token, (token_data){0}, ",");
+            return createToken(lexer, comma_token, &(token_data){0}, ",");
         case '.':
-            return createToken(lexer, dot_token, (token_data){0}, ".");
+            return createToken(lexer, dot_token, &(token_data){0}, ".");
         case ';':
-            return createToken(lexer, semicolon_token, (token_data){0}, ";");
+            return createToken(lexer, semicolon_token, &(token_data){0}, ";");
         case ':':
-            return createToken(lexer, colon_token, (token_data){0}, ":");
+            return createToken(lexer, colon_token, &(token_data){0}, ":");
         default:
-            return createToken(lexer, null_token, (token_data){0}, "");
+            return createToken(lexer, null_token, &(token_data){0}, "");
     }
 }
 
@@ -280,7 +291,21 @@ void freeLexer(lexer *lexer){
     lexer->src = NULL;
 }
 
-void freeToken(token *token){
-    free(token->lexeme);
-    token->lexeme = NULL;
+void freeToken(token *t) {
+    if (t->lexeme != NULL) {
+        free(t->lexeme);
+        t->lexeme = NULL;
+    }
+
+    if (t->type == identifier_token && t->data.identifier != NULL) {
+        free(t->data.identifier);
+        t->data.identifier = NULL;
+    }
+
+    if (t->type == string_literal_token) {
+        if (t->data.properties.value.value.str_value != NULL) {
+            free(t->data.properties.value.value.str_value);
+            t->data.properties.value.value.str_value = NULL;
+        }
+    }
 }
