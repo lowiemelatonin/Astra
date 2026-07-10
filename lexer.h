@@ -18,6 +18,8 @@ typedef enum {
     string_token,           // string
     string_literal_token,   // "dolor sit"
     struct_token,           // struct
+    enum_token,             // enum
+    union_token,            // union
     plus_token,             // +
     increment_token,        // ++
     minus_token,            // -

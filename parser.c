@@ -19,6 +19,9 @@ astNode *parseIfStatement(parser *parser);
 astNode *parseForStatement(parser *parser);
 astNode *parseImportStatement(parser *parser);
 astNode *parseFunction(parser *parser);
+astNode *parseStruct(parser *parser);
+astNode *parseUnion(parser *parser);
+astNode *parseEnum(parser *parser);
 astNode *parseParamList(parser *parser);
 astNode *parseType(parser *parser);
 dataFlags parseFlags(parser *parser);
@@ -605,13 +608,27 @@ astNode *parseParamList(parser *parser){
 }
 
 astNode *parseType(parser *parser){
+    astNode *type_node = NULL;
     token t = parser->current;
 
-    if(t.type == void_token || t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == identifier_token){
-        astNode *type_node = createIdentifierNode(t.lexeme);
-        advanceParser(parser);
+    if(t.type == struct_token){
+        type_node = parseStruct(parser);
+    } 
+    else if(t.type == union_token){
+        type_node = parseUnion(parser);
+    } 
+    else if(t.type == enum_token){
+        type_node = parseEnum(parser);
+    } 
 
-        while(parser->current.type == star_token) {
+    else if(t.type == void_token || t.type == int_token || t.type == long_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == identifier_token){
+        
+        type_node = createIdentifierNode(t.lexeme);
+        advanceParser(parser);
+    }
+
+    if(type_node){
+        while(parser->current.type == star_token){
             advanceParser(parser);
             type_node = createPointerNode(type_node);
         }
@@ -623,18 +640,112 @@ astNode *parseType(parser *parser){
 astNode *parseStruct(parser *parser){
     advanceParser(parser);
 
-    if(parser->current.type != identifier_token) return NULL;
-    char *name = strdup(parser->current.data.identifier);
-    advanceParser(parser);
-
-    astNode *body = parseBody(parser);
-    if(!body){
-        free(name);
-        return NULL;
+    char *name = NULL;
+    if(parser->current.type == identifier_token){
+        name = strdup(parser->current.data.identifier);
+        advanceParser(parser);
     }
 
-    if(parser->current.type == semicolon_token) advanceParser(parser);
-    return createStructNode(name, body);
+    if(parser->current.type != l_brace_token){
+        astNode *node = createStructNode(name, NULL);
+        if(name) free(name);
+        return node;
+    }
+
+    astNode *body = parseBody(parser);
+    astNode *node = createStructNode(name, body);
+    if(name) free(name);
+    return node;
+}
+
+astNode *parseUnion(parser *parser){
+    advanceParser(parser);
+
+    char *name = NULL;
+    if(parser->current.type == identifier_token){
+        name = strdup(parser->current.data.identifier);
+        advanceParser(parser);
+    }
+
+    if(parser->current.type != l_brace_token){
+        astNode *node = createUnionNode(name, NULL);
+        if(name) free(name);
+        return node;
+    }
+
+    astNode *body = parseBody(parser);
+    astNode *node = createUnionNode(name, body);
+    if(name) free(name);
+    return node;
+}
+
+astNode *parseEnum(parser *parser){
+    advanceParser(parser);
+
+    char *name = NULL;
+    if(parser->current.type == identifier_token){
+        name = strdup(parser->current.data.identifier);
+        advanceParser(parser);
+    }
+
+    if(parser->current.type != l_brace_token) { 
+        astNode *node = createEnumNode(name, NULL);
+        if(name) free(name);
+        return node; 
+    }
+    advanceParser(parser);
+
+    astNode **elements = NULL;
+    int count = 0;
+
+    while(parser->current.type != r_brace_token && parser->current.type != eof_token){
+        if(parser->current.type != identifier_token) break;
+        
+        char *enum_id = strdup(parser->current.data.identifier);
+        advanceParser(parser);
+
+        astNode *initializer = NULL;
+        if(parser->current.type == equal_token){
+            advanceParser(parser);
+            initializer = parseExpression(parser);
+        }
+
+        astNode *type_node = createIdentifierNode("int");
+        astNode *member_node = createDefineNode(type_node, enum_id, initializer, const_flag);
+        free(enum_id);
+
+        astNode **tmp = realloc(elements, sizeof(astNode *) * (count + 1));
+        if(!tmp){ 
+            for(int i = 0; i < count; i++) freeAst(elements[i]);
+            free(elements);
+            if(name) free(name);
+            freeAst(member_node);
+            freeAst(type_node);
+            return NULL; 
+        }
+
+        elements = tmp;
+        elements[count++] = member_node;
+
+        if(parser->current.type == comma_token){
+            advanceParser(parser);
+        } else {
+            break;
+        }
+    }
+
+    if(parser->current.type != r_brace_token){
+        for(int i = 0; i < count; i++) freeAst(elements[i]);
+        free(elements);
+        if(name) free(name);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *body = createBodyNode(elements, count);
+    astNode *node = createEnumNode(name, body);
+    if(name) free(name);
+    return node;
 }
 
 dataFlags parseFlags(parser *parser) {
@@ -661,6 +772,10 @@ astNode *parseStatement(parser *parser){
     switch(parser->current.type){
         case struct_token:
             return parseStruct(parser);
+        case enum_token:
+            return parseEnum(parser);
+        case union_token:
+            return parseUnion(parser);
         case function_token:
             return parseFunction(parser);
         case return_token:

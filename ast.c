@@ -175,7 +175,7 @@ astNode *createImportNode(astNode *identifier){
 
 astNode *createStructNode(char *identifier, astNode *body){
     astNode *node = allocNode(struct_node);
-    node->struct_stmt.identifier = strdup(identifier);
+    node->struct_stmt.identifier = identifier ? strdup(identifier) : NULL;
     node->struct_stmt.body = body;
     return node;
 }
@@ -184,6 +184,20 @@ astNode *createMemberAccessNode(astNode *object, char *member){
     astNode *node = allocNode(member_access_node);
     node->member_access.object = object;
     node->member_access.member = strdup(member);
+    return node;
+}
+
+astNode *createEnumNode(char *identifier, astNode *body){
+    astNode *node = allocNode(enum_node);
+    node->enum_stmt.identifier = identifier ? strdup(identifier) : NULL;
+    node->enum_stmt.body = body;
+    return node;
+}
+
+astNode *createUnionNode(char *identifier, astNode *body){
+    astNode *node = allocNode(union_node);
+    node->union_stmt.identifier = identifier ? strdup(identifier) : NULL;
+    node->union_stmt.body = body;
     return node;
 }
 
@@ -269,9 +283,16 @@ void freeAst(astNode *node){
             freeAst(node->member_access.object);
             free(node->member_access.member);
             break;
+        case enum_node:
+            free(node->enum_stmt.identifier);
+            freeAst(node->enum_stmt.body);
+            break;
+        case union_node:
+            free(node->union_stmt.identifier);
+            freeAst(node->union_stmt.body);
+            break;
         default:
             break;
     }
     free(node);
 }
-

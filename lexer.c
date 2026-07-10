@@ -171,6 +171,8 @@ token lexIdent(lexer *lexer){
     keyword("double", double_token);
     keyword("string", string_token);
     keyword("struct", struct_token);
+    keyword("enum", enum_token);
+    keyword("union", union_token);
 
     #undef keyword
 
