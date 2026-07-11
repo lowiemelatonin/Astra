@@ -264,6 +264,13 @@ astNode *createTypeofNode(astNode *operand){
     return node;
 }
 
+astNode *createCastNode(astNode *type, astNode *operand){
+    astNode *node = allocNode(cast_node);
+    node->cast_expr.type = type;
+    node->cast_expr.operand = operand;
+    return node;
+}
+
 void freeAst(astNode *node){
     if(!node) return;
 
@@ -380,6 +387,10 @@ void freeAst(astNode *node){
             break;
         case typeof_node:
             freeAst(node->typeof_expr.operand);
+            break;
+        case cast_node:
+            freeAst(node->cast_expr.type);
+            freeAst(node->cast_expr.operand);
             break;
         default:
             break;

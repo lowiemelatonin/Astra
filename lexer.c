@@ -233,16 +233,21 @@ token nextToken(lexer *lexer){
     switch(current){
         case '+':
             if(match(lexer, '+')) return createToken(lexer, increment_token, &(token_data){0}, "++");
+            if(match(lexer, '=')) return createToken(lexer, plus_equal_token, &(token_data){0}, "+=");
             return createToken(lexer, plus_token, &(token_data){0}, "+");
         case '-':
             if(match(lexer, '-')) return createToken(lexer, decrement_token, &(token_data){0}, "--");
             if(match(lexer, '>')) return createToken(lexer, arrow_token, &(token_data){0}, "->");
+            if(match(lexer, '=')) return createToken(lexer, minus_equal_token, &(token_data){0}, "-=");
             return createToken(lexer, minus_token, &(token_data){0}, "-");
         case '*':
+            if(match(lexer, '=')) return createToken(lexer, star_equal_token, &(token_data){0}, "*=");
             return createToken(lexer, star_token, &(token_data){0}, "*");
         case '/':
+            if(match(lexer, '=')) return createToken(lexer, slash_equal_token, &(token_data){0}, "/=");
             return createToken(lexer, slash_token, &(token_data){0}, "/");
         case '%':
+            if(match(lexer, '=')) return createToken(lexer, percent_equal_token, &(token_data){0}, "%=");
             return createToken(lexer, percent_token, &(token_data){0}, "%");
         case '=':
             if(match(lexer, '=')) return createToken(lexer, equal_equal_token, &(token_data){0}, "==");

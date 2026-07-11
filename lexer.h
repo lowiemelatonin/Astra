@@ -39,6 +39,11 @@ typedef enum {
     or_token,                   // ||
     not_token,                  // !
     equal_token,                // =
+    plus_equal_token,           // +=
+    minus_equal_token,          // -=
+    star_equal_token,           // *=
+    slash_equal_token,          // /=
+    percent_equal_token,        // %=
     equal_equal_token,          // ==
     not_equal_token,            // !=
     less_token,                 // <

@@ -31,6 +31,7 @@ astNode *parseParamList(parser *parser);
 astNode *parseType(parser *parser);
 dataFlags parseFlags(parser *parser);
 static int isTypeToken(token_type type);
+static token_type peekNextTokenType(parser *parser);
 
 void initParser(parser *parser, lexer *lexer){
     parser->lexer = lexer;
@@ -44,12 +45,37 @@ void advanceParser(parser *parser){
 
 astNode *parseAssignment(parser *parser){
     astNode *left = parseLogicalOr(parser);
+    token_type type = parser->current.type;
 
-    if(parser->current.type == equal_token){
+    if(type == equal_token || type == plus_equal_token || type == minus_equal_token || type == star_equal_token || type == slash_equal_token || type == percent_equal_token){
+        opType op;
+        switch(type){
+            case equal_token:
+                op = assignment_op;
+                break;
+            case plus_equal_token:
+                op = plus_assignment_op;
+                break;
+            case minus_equal_token:
+                op = minus_assignment_op;
+                break;
+            case star_equal_token:
+                op = star_assignment_op;
+                break;
+            case slash_equal_token:
+                op = slash_assignment_op;
+                break;
+            case percent_equal_token:
+                op = percent_assignment_op;
+                break;
+            default:
+                op = assignment_op;
+                break;
+        }
         advanceParser(parser);
 
         astNode *right = parseAssignment(parser);
-        left = createAssignmentNode(left, right, assignment_op);
+        left = createAssignmentNode(left, right, op);
     }
     return left;
 }
@@ -212,9 +238,32 @@ astNode *parsePostfix(parser *parser){
     return expr;
 }
 
+static token_type peekNextTokenType(parser *parser){
+    lexer temp_lexer = *parser->lexer;
+    token next = nextToken(&temp_lexer);
+    token_type type = next.type;
+    freeToken(&next);
+    return type;
+}
+
 astNode *parseUnary(parser *parser){
     token_type current_type = parser->current.type;
 
+    if(current_type == l_paren_token){
+        token_type next_type = peekNextTokenType(parser);
+
+        if(isTypeToken(next_type)){
+            advanceParser(parser);
+            astNode *type = parseType(parser);
+
+            if(parser->current.type == r_paren_token){
+                advanceParser(parser);
+            }
+
+            astNode *operand = parseUnary(parser); 
+            return createCastNode(type, operand);
+        }
+    }
     if(current_type == not_token || current_type == minus_token || current_type == decrement_token || current_type == plus_token || current_type == increment_token || current_type == star_token || current_type == address_token || current_type == sizeof_token){
         token op = parser->current;
         advanceParser(parser);

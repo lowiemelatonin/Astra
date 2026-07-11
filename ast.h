@@ -50,6 +50,11 @@ typedef enum {
     greater_or_equal_op,
 
     assignment_op,
+    plus_assignment_op,
+    minus_assignment_op,
+    star_assignment_op,
+    slash_assignment_op,
+    percent_assignment_op,
 
     dereference_op,
     address_op
@@ -89,7 +94,8 @@ typedef enum {
     enum_node,
     union_node,
     sizeof_node,
-    typeof_node
+    typeof_node,
+    cast_node
 } nodeType;
 
 typedef struct astNode astNode;
@@ -229,6 +235,11 @@ typedef struct astNode {
         struct {
             astNode *operand;
         } typeof_expr;
+
+        struct {
+            astNode *type;
+            astNode *operand;
+        } cast_expr;
     };
 } astNode;
 
@@ -261,6 +272,7 @@ astNode *createEnumNode(char *identifier, astNode *body);
 astNode *createUnionNode(char *identifier, astNode *body);
 astNode *createSizeofNode(astNode *operand);
 astNode *createTypeofNode(astNode *operand);
+astNode *createCastNode(astNode *type, astNode *operand);
 
 void printAst(astNode *node, int level);
 void freeAst(astNode *node);
