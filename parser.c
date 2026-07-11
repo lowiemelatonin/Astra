@@ -30,6 +30,7 @@ astNode *parseEnum(parser *parser);
 astNode *parseParamList(parser *parser);
 astNode *parseType(parser *parser);
 dataFlags parseFlags(parser *parser);
+static int isTypeToken(token_type type);
 
 void initParser(parser *parser, lexer *lexer){
     parser->lexer = lexer;
@@ -214,9 +215,27 @@ astNode *parsePostfix(parser *parser){
 astNode *parseUnary(parser *parser){
     token_type current_type = parser->current.type;
 
-    if(current_type == not_token || current_type == minus_token || current_type == decrement_token || current_type == plus_token || current_type == increment_token || current_type == star_token || current_type == address_token){
+    if(current_type == not_token || current_type == minus_token || current_type == decrement_token || current_type == plus_token || current_type == increment_token || current_type == star_token || current_type == address_token || current_type == sizeof_token){
         token op = parser->current;
         advanceParser(parser);
+
+        if(op.type == sizeof_token){
+            astNode *operand = NULL;
+            if(parser->current.type == l_paren_token){
+                advanceParser(parser);
+                if(isTypeToken(parser->current.type)){
+                    operand = parseType(parser);
+                } else {
+                    operand = parseExpression(parser);
+                }
+                if (parser->current.type == r_paren_token) {
+                    advanceParser(parser);
+                }
+            } else {
+                operand = parseUnary(parser);
+            }
+            return createSizeofNode(operand);
+        }
 
         astNode *right = parseUnary(parser);
         opType operation;
@@ -798,10 +817,31 @@ astNode *parseType(parser *parser){
     } 
     else if(t.type == enum_token){
         type_node = parseEnum(parser);
-    } 
+    }
+    else if(t.type == typeof_token){
+        advanceParser(parser);
+        
+        if(parser->current.type == l_paren_token){
+            advanceParser(parser);
+            astNode *operand = NULL;
+            
+            if(isTypeToken(parser->current.type)){
+                operand = parseType(parser);
+            } else {
+                operand = parseExpression(parser);
+            }
+            
+            if(parser->current.type == r_paren_token){
+                advanceParser(parser);
+            }
+            
+            type_node = createTypeofNode(operand);
+        } else {
+            return NULL;
+        }
+    }
 
     else if(t.type == void_token || t.type == short_token || t.type == int_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == bool_token || t.type == identifier_token){
-        
         type_node = createIdentifierNode(t.lexeme);
         advanceParser(parser);
     }
@@ -955,6 +995,10 @@ dataFlags parseFlags(parser *parser) {
         advanceParser(parser);
     }
     return flags;
+}
+
+static int isTypeToken(token_type type){
+    return type == int_token || type == short_token || type == long_token || type == float_token || type == double_token || type == void_token || type == bool_token || type == string_token || type == struct_token || type == union_token || type == enum_token || type == typeof_token;
 }
 
 astNode *parseStatement(parser *parser){

@@ -58,6 +58,8 @@ typedef enum {
     return_token,               // return
     break_token,                // break
     continue_token,             // continue
+    sizeof_token,               // sizeof(int)
+    typeof_token,               // typeof(x)
     l_paren_token,              // (
     r_paren_token,              // )
     l_bracket_token,            // [

@@ -189,6 +189,9 @@ token lexIdent(lexer *lexer){
     keyword("struct", struct_token);
     keyword("enum", enum_token);
     keyword("union", union_token);
+    
+    keyword("sizeof", sizeof_token);
+    keyword("typeof", typeof_token);
 
     #undef keyword
 

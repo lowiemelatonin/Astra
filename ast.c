@@ -252,6 +252,18 @@ astNode *createUnionNode(char *identifier, astNode *body){
     return node;
 }
 
+astNode *createSizeofNode(astNode *operand){
+    astNode *node = allocNode(sizeof_node);
+    node->sizeof_expr.operand = operand;
+    return node;
+}
+
+astNode *createTypeofNode(astNode *operand){
+    astNode *node = allocNode(typeof_node);
+    node->typeof_expr.operand = operand;
+    return node;
+}
+
 void freeAst(astNode *node){
     if(!node) return;
 
@@ -362,6 +374,12 @@ void freeAst(astNode *node){
         case union_node:
             free(node->union_stmt.identifier);
             freeAst(node->union_stmt.body);
+            break;
+        case sizeof_node:
+            freeAst(node->sizeof_expr.operand);
+            break;
+        case typeof_node:
+            freeAst(node->typeof_expr.operand);
             break;
         default:
             break;

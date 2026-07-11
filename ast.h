@@ -87,7 +87,9 @@ typedef enum {
     dot_access_node,
     arrow_access_node,
     enum_node,
-    union_node
+    union_node,
+    sizeof_node,
+    typeof_node
 } nodeType;
 
 typedef struct astNode astNode;
@@ -220,6 +222,13 @@ typedef struct astNode {
             astNode *body;
         } union_stmt;
 
+        struct {
+            astNode *operand;
+        } sizeof_expr;
+
+        struct {
+            astNode *operand;
+        } typeof_expr;
     };
 } astNode;
 
@@ -250,6 +259,8 @@ astNode *createDotAccessNode(astNode *object, char *member);
 astNode *createArrowAccessNode(astNode *object, char *member);
 astNode *createEnumNode(char *identifier, astNode *body);
 astNode *createUnionNode(char *identifier, astNode *body);
+astNode *createSizeofNode(astNode *operand);
+astNode *createTypeofNode(astNode *operand);
 
 void printAst(astNode *node, int level);
 void freeAst(astNode *node);
