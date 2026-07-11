@@ -160,6 +160,9 @@ token lexIdent(lexer *lexer){
 
     keyword("if", if_token);
     keyword("else", else_token);
+    keyword("switch", switch_token);
+    keyword("case", case_token);
+    keyword("default", default_token);
     keyword("for", for_token);
     keyword("while", while_token);
     keyword("do", do_token);

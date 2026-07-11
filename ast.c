@@ -142,6 +142,24 @@ astNode *createIfNode(astNode *condition, astNode *then_branch, astNode *else_br
     return node;
 }
 
+astNode *createSwitchNode(astNode *condition, astNode *body){
+    astNode *node = allocNode(switch_node);
+    node->switch_stmt.condition = condition;
+    node->switch_stmt.body = body;
+    return node;
+}
+
+astNode *createCaseNode(astNode *value){
+    astNode *node = allocNode(case_node);
+    node->case_stmt.value = value;
+    return node;
+}
+
+astNode *createDefaultNode(){
+    astNode *node = allocNode(default_node);
+    return node;
+}
+
 astNode *createForNode(astNode *initializer, astNode *condition, astNode *increment, astNode *then_branch){
     astNode *node = allocNode(for_node);
     node->for_stmt.initializer = initializer;
@@ -292,6 +310,15 @@ void freeAst(astNode *node){
             freeAst(node->if_stmt.then_branch);
             freeAst(node->if_stmt.else_branch);
             break;
+        case switch_node:
+            freeAst(node->switch_stmt.condition);
+            freeAst(node->switch_stmt.body);
+            break;
+        case case_node:
+            freeAst(node->case_stmt.value);
+            break;
+        case default_node:
+            break;
         case for_node:
             freeAst(node->for_stmt.initializer);
             freeAst(node->for_stmt.condition);
@@ -341,4 +368,3 @@ void freeAst(astNode *node){
     }
     free(node);
 }
-

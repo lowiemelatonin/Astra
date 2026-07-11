@@ -47,6 +47,9 @@ typedef enum {
     greater_equal_token,        // >=
     if_token,                   // if
     else_token,                 // else
+    switch_token,               // switch
+    case_token,                 // case
+    default_token,              // default
     for_token,                  // for
     while_token,                // while
     do_token,                   // do

@@ -16,6 +16,9 @@ astNode *parseContinueStatement(parser *parser);
 astNode *parseBreakStatement(parser *parser);
 astNode *parseBody(parser *parser);
 astNode *parseIfStatement(parser *parser);
+astNode *parseSwitchStatement(parser *parser);
+astNode *parseCaseStatement(parser *parser);
+astNode *parseDefaultStatement(parser *parser);
 astNode *parseForStatement(parser *parser);
 astNode *parseWhileStatement(parser *parser);
 astNode *parseDoWhileStatement(parser *parser);
@@ -490,6 +493,57 @@ astNode *parseIfStatement(parser *parser){
     return createIfNode(condition, then_branch, else_branch);
 }
 
+astNode *parseSwitchStatement(parser *parser){
+    if(parser->current.type != switch_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token) return NULL;
+    advanceParser(parser);
+
+    astNode *condition = parseExpression(parser);
+    if(!condition) return NULL;
+
+    if(parser->current.type != r_paren_token){
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *body = parseStatement(parser);
+    if(!body){
+        freeAst(condition);
+        return NULL;
+    }
+
+    return createSwitchNode(condition, body);
+}
+
+astNode *parseCaseStatement(parser *parser){
+    if(parser->current.type != case_token) return NULL;
+    advanceParser(parser);
+
+    astNode *value = parseExpression(parser);
+    if(!value) return NULL;
+
+    if(parser->current.type != colon_token){
+        freeAst(value);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    return createCaseNode(value);
+}
+
+astNode *parseDefaultStatement(parser *parser){
+    if(parser->current.type != default_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != colon_token) return NULL;
+    advanceParser(parser);
+
+    return createDefaultNode();
+}
+
 astNode *parseForStatement(parser *parser){
     if(parser->current.type != for_token) return NULL;
     advanceParser(parser);
@@ -930,6 +984,12 @@ astNode *parseStatement(parser *parser){
             return parseBody(parser);
         case if_token:
             return parseIfStatement(parser);
+        case switch_token:
+            return parseSwitchStatement(parser);
+        case case_token:
+            return parseCaseStatement(parser);
+        case default_token:
+            return parseDefaultStatement(parser);
         case for_token:
             return parseForStatement(parser);
         case while_token:

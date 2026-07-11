@@ -73,6 +73,9 @@ typedef enum {
     call_node,
     data_operation_node,
     if_node,
+    switch_node,
+    case_node,
+    default_node,
     for_node,
     while_node,
     do_while_node,
@@ -159,6 +162,15 @@ typedef struct astNode {
         } if_stmt;
 
         struct {
+            astNode *condition;
+            astNode *body;
+        } switch_stmt;
+
+        struct {
+            astNode *value;
+        } case_stmt;
+
+        struct {
             astNode *initializer;
             astNode *condition;
             astNode *increment;
@@ -223,6 +235,9 @@ astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *par
 astNode *createCallNode(astNode *identifier, astNode *args);
 astNode *createDataOperationNode(astNode *left, astNode *right, opType op);
 astNode *createIfNode(astNode *condition, astNode *then_branch, astNode *else_branch);
+astNode *createSwitchNode(astNode *condition, astNode *body);
+astNode *createCaseNode(astNode *value);
+astNode *createDefaultNode();
 astNode *createForNode(astNode *initializer, astNode *condition, astNode *increment, astNode *then_branch);
 astNode *createWhileNode(astNode *condition, astNode *then_branch);
 astNode *createDoWhileNode(astNode *body, astNode *condition);
