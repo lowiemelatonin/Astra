@@ -59,6 +59,8 @@ typedef enum {
     while_token,                // while
     do_token,                   // do
     import_token,               // import
+    impl_token,                 // impl
+    self_token,                 // self
     function_token,             // fun
     return_token,               // return
     break_token,                // break

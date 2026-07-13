@@ -25,6 +25,7 @@ astNode *parseDoWhileStatement(parser *parser);
 astNode *parseImportStatement(parser *parser);
 astNode *parseFunction(parser *parser);
 astNode *parseStruct(parser *parser);
+astNode *parseImplStatement(parser *parser);
 astNode *parseUnion(parser *parser);
 astNode *parseEnum(parser *parser);
 astNode *parseParamList(parser *parser);
@@ -86,6 +87,12 @@ astNode *parseExpression(parser *parser){
 
 astNode *parsePrimary(parser *parser) {
     token token = parser->current;
+
+    if(token.type == self_token){
+        astNode *node = createIdentifierNode("self");
+        advanceParser(parser);
+        return node;
+    }
 
     if(token.type == identifier_token || token.type == const_token || token.type == static_token){
         dataFlags flags = parseFlags(parser);
@@ -827,6 +834,7 @@ astNode *parseFunction(parser *parser){
 
     if(parser->current.type != r_paren_token){
         free(func_name);
+        if(params) freeAst(params);
         return NULL;
     }
     advanceParser(parser);
@@ -855,34 +863,45 @@ astNode *parseParamList(parser *parser){
     int count = 0;
 
     while(parser->current.type != r_paren_token && parser->current.type != eof_token){
-        if(parser->current.type != identifier_token) {
-            for(int i = 0; i < count; i++) freeAst(params[i]);
-            free(params);
-            return NULL;
-        }
-        
-        char *param_name = strdup(parser->current.data.identifier);
-        advanceParser(parser);
+        astNode *param_node = NULL;
 
-        if(parser->current.type != colon_token) {
+        if(parser->current.type == self_token){
+            char *param_name = strdup("self");
+            advanceParser(parser);
+
+            astNode *param_type = createIdentifierNode("self");
+            param_node = createDefineNode(param_type, param_name, NULL, 0);
             free(param_name);
-            for(int i = 0; i < count; i++) freeAst(params[i]);
-            free(params);
-            return NULL;
-        }
-        advanceParser(parser);
+        } else {
+            if(parser->current.type != identifier_token) {
+                for(int i = 0; i < count; i++) freeAst(params[i]);
+                free(params);
+                return NULL;
+            }
+            
+            char *param_name = strdup(parser->current.data.identifier);
+            advanceParser(parser);
 
-        astNode *param_type = parseType(parser);
-        
-        if(!param_type) {
+            if(parser->current.type != colon_token) {
+                free(param_name);
+                for(int i = 0; i < count; i++) freeAst(params[i]);
+                free(params);
+                return NULL;
+            }
+            advanceParser(parser);
+
+            astNode *param_type = parseType(parser);
+            
+            if(!param_type) {
+                free(param_name);
+                for(int i = 0; i < count; i++) freeAst(params[i]);
+                free(params);
+                return NULL;
+            }
+
+            param_node = createDefineNode(param_type, param_name, NULL, 0);
             free(param_name);
-            for(int i = 0; i < count; i++) freeAst(params[i]);
-            free(params);
-            return NULL;
         }
-
-        astNode *param_node = createDefineNode(param_type, param_name, NULL, 0);
-        free(param_name);
 
         astNode **tmp = realloc(params, sizeof(astNode *) * (count + 1));
         
@@ -1013,6 +1032,26 @@ astNode *parseStruct(parser *parser){
     return node;
 }
 
+astNode *parseImplStatement(parser *parser){
+    advanceParser(parser);
+
+    if(parser->current.type != identifier_token) return NULL;
+
+    char *target = strdup(parser->current.data.identifier);
+    advanceParser(parser);
+
+    astNode *body = parseBody(parser);
+
+    if(!body){
+        free(target);
+        return NULL;
+    }
+
+    astNode *node = createImplNode(target, body);
+    free(target);
+    return node;
+}
+
 astNode *parseUnion(parser *parser){
     advanceParser(parser);
 
@@ -1136,6 +1175,8 @@ astNode *parseStatement(parser *parser){
             return parseEnum(parser);
         case union_token:
             return parseUnion(parser);
+        case impl_token:
+            return parseImplStatement(parser);
         case function_token:
             return parseFunction(parser);
         case return_token:

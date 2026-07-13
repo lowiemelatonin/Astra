@@ -207,6 +207,20 @@ astNode *createStructNode(char *identifier, astNode *body){
     return node;
 }
 
+astNode *createImplNode(char *target, astNode *body){
+    astNode *node = allocNode(impl_node);
+    if (!node) return NULL;
+
+    node->impl_stmt.target = strdup(target);
+    if (!node->impl_stmt.target) {
+        free(node);
+        return NULL;
+    }
+
+    node->impl_stmt.body = body;
+    return node;
+}
+
 astNode *createDotAccessNode(astNode *object, char *member) {
     astNode *node = allocNode(dot_access_node);
     if (!node) return NULL;
@@ -360,6 +374,10 @@ void freeAst(astNode *node){
         case struct_node:
             free(node->struct_stmt.identifier);
             freeAst(node->struct_stmt.body);
+            break;
+        case impl_node:
+            free(node->impl_stmt.target);
+            freeAst(node->impl_stmt.body);
             break;
         case dot_access_node:
             freeAst(node->dot_access.object);

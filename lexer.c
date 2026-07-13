@@ -168,6 +168,8 @@ token lexIdent(lexer *lexer){
     keyword("do", do_token);
 
     keyword("import", import_token);
+    keyword("impl", impl_token);
+    keyword("self", self_token);
     keyword("fun", function_token);
     keyword("return", return_token);
     keyword("break", break_token);
