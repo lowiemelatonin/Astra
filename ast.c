@@ -207,17 +207,29 @@ astNode *createStructNode(char *identifier, astNode *body){
     return node;
 }
 
-astNode *createImplNode(char *target, astNode *body){
+astNode *createImplNode(char *trait_name, char *target, astNode *body){
     astNode *node = allocNode(impl_node);
     if (!node) return NULL;
 
+    node->impl_stmt.trait_name = trait_name ? strdup(trait_name) : NULL;
+    
     node->impl_stmt.target = strdup(target);
     if (!node->impl_stmt.target) {
+        if (node->impl_stmt.trait_name) free(node->impl_stmt.trait_name);
         free(node);
         return NULL;
     }
 
     node->impl_stmt.body = body;
+    return node;
+}
+
+astNode *createTraitNode(char *identifier, astNode *body) {
+    astNode *node = allocNode(trait_node);
+    if (!node) return NULL;
+
+    node->trait_stmt.identifier = identifier ? strdup(identifier) : NULL;
+    node->trait_stmt.body = body;
     return node;
 }
 
@@ -376,8 +388,17 @@ void freeAst(astNode *node){
             freeAst(node->struct_stmt.body);
             break;
         case impl_node:
+            if(node->impl_stmt.trait_name){
+                free(node->impl_stmt.trait_name);
+            }
             free(node->impl_stmt.target);
             freeAst(node->impl_stmt.body);
+            break;
+        case trait_node:
+            if(node->trait_stmt.identifier){
+                free(node->trait_stmt.identifier);
+            }
+            freeAst(node->trait_stmt.body);
             break;
         case dot_access_node:
             freeAst(node->dot_access.object);

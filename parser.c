@@ -26,6 +26,7 @@ astNode *parseImportStatement(parser *parser);
 astNode *parseFunction(parser *parser);
 astNode *parseStruct(parser *parser);
 astNode *parseImplStatement(parser *parser);
+astNode *parseTraitStatement(parser *parser);
 astNode *parseUnion(parser *parser);
 astNode *parseEnum(parser *parser);
 astNode *parseParamList(parser *parser);
@@ -136,6 +137,15 @@ astNode *parsePrimary(parser *parser) {
 
     if(token.type == short_literal_token || token.type == int_literal_token || token.type == long_literal_token || token.type == long_long_literal_token || token.type == float_literal_token || token.type == long_double_literal_token || token.type == string_literal_token || token.type == true_token || token.type == false_token){
         astNode *node = createValueNode(&token.data.properties.value);
+        advanceParser(parser);
+        return node;
+    }
+
+    if(token.type == null_literal_token){
+        dataValue null_val;
+        null_val.type = type_null;
+        
+        astNode *node = createValueNode(&null_val);
         advanceParser(parser);
         return node;
     }
@@ -1037,18 +1047,61 @@ astNode *parseImplStatement(parser *parser){
 
     if(parser->current.type != identifier_token) return NULL;
 
-    char *target = strdup(parser->current.data.identifier);
+    char *first_id = strdup(parser->current.data.identifier);
     advanceParser(parser);
+
+    char *trait_name = NULL;
+    char *target = NULL;
+
+    if(parser->current.type == for_token){
+        trait_name = first_id;
+        advanceParser(parser);
+
+        if(parser->current.type != identifier_token){
+            free(trait_name);
+            return NULL;
+        }
+        target = strdup(parser->current.data.identifier);
+        advanceParser(parser);
+    } else {
+        target = first_id;
+    }
 
     astNode *body = parseBody(parser);
 
     if(!body){
-        free(target);
+        if(trait_name) free(trait_name);
+        if(target) free(target);
         return NULL;
     }
 
-    astNode *node = createImplNode(target, body);
-    free(target);
+    astNode *node = createImplNode(trait_name, target, body);
+    
+    if(trait_name) free(trait_name);
+    if(target) free(target);
+
+    return node;
+}
+
+astNode *parseTraitStatement(parser *parser){
+    advanceParser(parser);
+
+    char *name = NULL;
+    if(parser->current.type == identifier_token){
+        name = strdup(parser->current.data.identifier);
+        advanceParser(parser);
+    }
+
+    if(parser->current.type != l_brace_token){
+        astNode *node = createTraitNode(name, NULL);
+        if(name) free(name);
+        return node;
+    }
+
+    astNode *body = parseBody(parser);
+    astNode *node = createTraitNode(name, body);
+    
+    if(name) free(name);
     return node;
 }
 
@@ -1177,6 +1230,8 @@ astNode *parseStatement(parser *parser){
             return parseUnion(parser);
         case impl_token:
             return parseImplStatement(parser);
+        case trait_token:
+            return parseTraitStatement(parser);
         case function_token:
             return parseFunction(parser);
         case return_token:

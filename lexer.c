@@ -169,6 +169,7 @@ token lexIdent(lexer *lexer){
 
     keyword("import", import_token);
     keyword("impl", impl_token);
+    keyword("trait", trait_token);
     keyword("self", self_token);
     keyword("fun", function_token);
     keyword("return", return_token);
@@ -181,6 +182,7 @@ token lexIdent(lexer *lexer){
     keyword("bool", bool_token);
     keyword("true", true_token);
     keyword("false", false_token);
+    keyword("null", null_literal_token);
 
     keyword("short", short_token);
     keyword("int", int_token);

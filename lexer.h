@@ -11,6 +11,7 @@ typedef enum {
     bool_token,                 // bool
     true_token,                 // true
     false_token,                // false
+    null_literal_token,         // null
     short_token,                // short
     short_literal_token,        // 2 bytes
     int_token,                  // int
@@ -60,6 +61,7 @@ typedef enum {
     do_token,                   // do
     import_token,               // import
     impl_token,                 // impl
+    trait_token,                // trait
     self_token,                 // self
     function_token,             // fun
     return_token,               // return
