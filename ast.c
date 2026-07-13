@@ -92,14 +92,9 @@ astNode *createArrayNode(astNode *type, astNode *size, astNode *elements){
     return node;
 }
 
-astNode *createArrayAccessNode(char *identifier, astNode *index){
+astNode *createArrayAccessNode(astNode *array, astNode *index){
     astNode *node = allocNode(array_access_node);
-    node->array_access.identifier = strdup(identifier);
-    if(!node->array_access.identifier){
-        free(node);
-        return NULL;
-    }
-
+    node->array_access.array = array;
     node->array_access.index = index;
     return node;
 }
@@ -307,7 +302,7 @@ void freeAst(astNode *node){
             freeAst(node->array.elements);
             break;
         case array_access_node:
-            free(node->array_access.identifier);
+            freeAst(node->array_access.array);
             freeAst(node->array_access.index);
             break;
         case function_node:

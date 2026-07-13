@@ -87,27 +87,27 @@ astNode *parseExpression(parser *parser){
 astNode *parsePrimary(parser *parser) {
     token token = parser->current;
 
-    if (token.type == identifier_token || token.type == const_token || token.type == static_token) {
+    if(token.type == identifier_token || token.type == const_token || token.type == static_token){
         dataFlags flags = parseFlags(parser);
-        
-        if (parser->current.type != identifier_token) {
+
+        if(parser->current.type != identifier_token){
             return NULL;
         }
 
         char *name = strdup(parser->current.data.identifier);
         advanceParser(parser);
-        
-        if (parser->current.type == colon_token) {
+
+        if(parser->current.type == colon_token){
             advanceParser(parser);
 
             astNode *type = parseType(parser);
-            if (!type) {
+            if(!type){
                 free(name);
                 return NULL;
             }
 
             astNode *initializer = NULL;
-            if (parser->current.type == equal_token) {
+            if(parser->current.type == equal_token){
                 advanceParser(parser);
                 initializer = parseExpression(parser);
                 if (!initializer) {
@@ -118,31 +118,25 @@ astNode *parsePrimary(parser *parser) {
             }
 
             astNode *node = createDefineNode(type, name, initializer, flags);
-            
             free(name); 
             return node;
         }
-        
+
         astNode *node = createIdentifierNode(name);
-        
         free(name); 
         return node;
     }
 
-    if (token.type == short_literal_token || token.type == int_literal_token || 
-        token.type == long_literal_token || token.type == long_long_literal_token ||
-        token.type == float_literal_token || token.type == long_double_literal_token || 
-        token.type == string_literal_token || token.type == true_token || token.type == false_token) {
-        
+    if(token.type == short_literal_token || token.type == int_literal_token || token.type == long_literal_token || token.type == long_long_literal_token || token.type == float_literal_token || token.type == long_double_literal_token || token.type == string_literal_token || token.type == true_token || token.type == false_token){
         astNode *node = createValueNode(&token.data.properties.value);
         advanceParser(parser);
         return node;
     }
 
-    if (token.type == l_paren_token) {
+    if(token.type == l_paren_token){
         advanceParser(parser);
         astNode *expr = parseExpression(parser);
-        if (parser->current.type != r_paren_token) {
+        if(parser->current.type != r_paren_token){
             if (expr) freeAst(expr);
             return NULL;
         }
@@ -150,8 +144,51 @@ astNode *parsePrimary(parser *parser) {
         return expr;
     }
 
+    if(token.type == l_bracket_token){
+        advanceParser(parser);
+        astNode **elements = NULL;
+        int count = 0;
+
+        if(parser->current.type != r_bracket_token){
+            while(1){
+                astNode *expr = parseExpression(parser);
+                if(!expr){
+                    for(int i = 0; i < count; i++) freeAst(elements[i]);
+                    free(elements);
+                    return NULL;
+                }
+
+                astNode **tmp = realloc(elements, sizeof(astNode *) * (count + 1));
+                if(!tmp){
+                    for(int i = 0; i < count; i++) freeAst(elements[i]);
+                    free(elements);
+                    return NULL;
+                }
+                elements = tmp;
+                elements[count++] = expr;
+
+                if(parser->current.type == comma_token){
+                    advanceParser(parser);
+                } else {
+                    break;
+                }
+            }
+        }
+        if(parser->current.type != r_bracket_token){
+            for(int i = 0; i < count; i++) freeAst(elements[i]);
+            free(elements);
+            return NULL;
+        }
+        advanceParser(parser);
+
+        astNode *body = createBodyNode(elements, count);
+        free(elements);
+
+        return createArrayNode(NULL, NULL, body);
+    }
     return NULL;
 }
+
 astNode *parsePostfix(parser *parser){
     astNode *expr = parsePrimary(parser);
     
@@ -198,6 +235,24 @@ astNode *parsePostfix(parser *parser){
             astNode *args_node = createBodyNode(args, count);
             free(args);
             expr = createCallNode(expr, args_node);
+        }
+        else if(parser->current.type == l_bracket_token){
+            advanceParser(parser);
+
+            astNode *index = parseExpression(parser);
+            if(!index){
+                freeAst(expr);
+                return NULL;
+            }
+
+            if(parser->current.type != r_bracket_token){
+                freeAst(expr);
+                freeAst(index);
+                return NULL;
+            }
+            advanceParser(parser);
+
+            expr = createArrayAccessNode(expr, index); 
         }
         else if(parser->current.type == dot_token || parser->current.type == arrow_token){
             token_type op_type = parser->current.type;
@@ -915,6 +970,22 @@ astNode *parseType(parser *parser){
         while(parser->current.type == star_token){
             advanceParser(parser);
             type_node = createPointerNode(type_node);
+        }
+
+        while(parser->current.type == l_bracket_token){
+            advanceParser(parser);
+            astNode *size = NULL;
+
+            if(parser->current.type != r_bracket_token) size = parseExpression(parser);
+            if(parser->current.type == r_bracket_token){
+                advanceParser(parser);
+            } else {
+                freeAst(type_node);
+                if(size) freeAst(size);
+                return NULL;
+            }
+
+            type_node = createArrayNode(type_node, size, NULL);
         }
         return type_node;
     }

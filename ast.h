@@ -140,7 +140,7 @@ typedef struct astNode {
         } array;
 
         struct {
-            char *identifier;
+            astNode *array;
             astNode *index;
         } array_access;
 
@@ -250,7 +250,7 @@ astNode *createDefineNode(astNode *type, char *identifier, astNode *initializer,
 astNode *createPointerNode(astNode *pointer);
 astNode *createBodyNode(astNode **elements, int elements_count);
 astNode *createArrayNode(astNode *type, astNode *size, astNode *elements);
-astNode *createArrayAccessNode(char *identifier, astNode *index);
+astNode *createArrayAccessNode(astNode *array, astNode *index);
 astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *params, astNode *body, dataFlags flags);
 astNode *createCallNode(astNode *identifier, astNode *args);
 astNode *createDataOperationNode(astNode *left, astNode *right, opType op);
