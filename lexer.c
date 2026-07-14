@@ -46,6 +46,13 @@ bool match(lexer *lexer, char expected){
     return true;
 }
 
+static int hexValue(char c) {
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
+}
+
 token createToken(lexer *lexer, token_type type, token_data *data, char *lexeme){
     token token;
     token.type = type;
@@ -65,12 +72,51 @@ token createToken(lexer *lexer, token_type type, token_data *data, char *lexeme)
 token lexNums(lexer *lexer){
     long long start = lexer->position;
     bool is_float = false;
+    int base = 10;
+    int prefix_offset = 0;
 
-    while(isdigit(peek(lexer))){
-        advance(lexer);
+    if(peek(lexer) == '0'){
+        char next = peekNext(lexer);
+        
+        if(next == 'x' || next == 'X'){
+            base = 16;
+            prefix_offset = 2;
+            advance(lexer);
+            advance(lexer);
+            while(isxdigit(peek(lexer))) advance(lexer);
+            
+        } else if (next == 'b' || next == 'B'){
+            base = 2;
+            prefix_offset = 2;
+            advance(lexer);
+            advance(lexer);
+            while(peek(lexer) == '0' || peek(lexer) == '1') advance(lexer);
+            
+        } else if(next == 'o' || next == 'O'){
+            base = 8;
+            prefix_offset = 2;
+            advance(lexer);
+            advance(lexer);
+            while(peek(lexer) >= '0' && peek(lexer) <= '7') advance(lexer);
+            
+        } else if(isdigit(next)){
+            base = 8;
+            advance(lexer);
+            
+            while(isdigit(peek(lexer))) {
+                if(peek(lexer) == '8' || peek(lexer) == '9') base = 10;
+                advance(lexer);
+            }
+        } else {
+            advance(lexer);
+        }
+    } else {
+        while(isdigit(peek(lexer))){
+            advance(lexer);
+        }
     }
 
-    if(peek(lexer) == '.' && isdigit(peekNext(lexer))){
+    if(base == 10 && peek(lexer) == '.' && isdigit(peekNext(lexer))){
         is_float = true;
         advance(lexer);
         while(isdigit(peek(lexer))){
@@ -81,6 +127,7 @@ token lexNums(lexer *lexer){
     long long len = lexer->position - start;
     char *numStr = malloc(len + 1);
     if(!numStr) return createToken(lexer, null_token, &(token_data){0}, ""); 
+    
     memcpy(numStr, &lexer->src[start], len);
     numStr[len] = '\0';
 
@@ -93,7 +140,9 @@ token lexNums(lexer *lexer){
         data.properties.value.value.d_value = val;
         token = createToken(lexer, float_literal_token, &data, numStr);
     } else {
-        long long val = strtoll(numStr, NULL, 10);
+        char *parseStr = numStr + prefix_offset;
+        
+        long long val = strtoll(parseStr, NULL, base);
         
         if(val >= INT_MIN && val <= INT_MAX){
             data.properties.value.type = type_int;
@@ -109,15 +158,19 @@ token lexNums(lexer *lexer){
             token = createToken(lexer, long_long_literal_token, &data, numStr);
         }
     }
+    
     free(numStr);
     return token;
 }
 
 token lexStr(lexer *lexer){
+    char delimiter = lexer->src[lexer->position - 1];
     long long start = lexer->position;
 
-    while(!isAtEnd(lexer) && peek(lexer) != '"'){
-        if(peek(lexer) == '\\' && peekNext(lexer) == '"') advance(lexer);
+    while(!isAtEnd(lexer) && peek(lexer) != delimiter){
+        if(peek(lexer) == '\\' && !isAtEnd(lexer)){
+            advance(lexer);
+        }
         advance(lexer);
     }
 
@@ -125,19 +178,84 @@ token lexStr(lexer *lexer){
         return createToken(lexer, null_token, &(token_data){0}, "");
     }
 
+    long long end = lexer->position;
     advance(lexer);
-    long long len = lexer->position - start - 1;
-    char *str = malloc(len + 1);
+
+    long long max_len = end - start;
+    char *str = malloc(max_len + 1);
     if(!str) return createToken(lexer, null_token, &(token_data){0}, "");
 
-    memcpy(str, &lexer->src[start], len);
-    str[len] = '\0';
+    long long src_idx = start;
+    long long dest_idx = 0;
+
+    while(src_idx < end){
+        if(lexer->src[src_idx] == '\\' && src_idx + 1 < end){
+            src_idx++;
+            char escape_char = lexer->src[src_idx];
+
+            switch(escape_char) {
+                case 'a': str[dest_idx++] = '\a'; break; 
+                case 'b': str[dest_idx++] = '\b'; break; 
+                case 'f': str[dest_idx++] = '\f'; break; 
+                case 'n': str[dest_idx++] = '\n'; break; 
+                case 'r': str[dest_idx++] = '\r'; break; 
+                case 't': str[dest_idx++] = '\t'; break; 
+                case 'v': str[dest_idx++] = '\v'; break; 
+                case '\\': str[dest_idx++] = '\\'; break; 
+                case '\'': str[dest_idx++] = '\''; break; 
+                case '"': str[dest_idx++] = '"'; break;  
+                case '?': str[dest_idx++] = '\?'; break; 
+
+                case '0': case '1': case '2': case '3':
+                case '4': case '5': case '6': case '7': {
+                    int octal_val = 0;
+                    int count = 0;
+                    while(src_idx < end && count < 3 && lexer->src[src_idx] >= '0' && lexer->src[src_idx] <= '7') {
+                        octal_val = octal_val * 8 + (lexer->src[src_idx] - '0');
+                        src_idx++;
+                        count++;
+                    }
+                    src_idx--;
+                    str[dest_idx++] = (char)octal_val;
+                    break;
+                }
+
+                case 'x': {
+                    src_idx++;
+                    int hex_val = 0;
+                    int count = 0;
+                    int val;
+                    while(src_idx < end && (val = hexValue(lexer->src[src_idx])) != -1) {
+                        hex_val = hex_val * 16 + val;
+                        src_idx++;
+                        count++;
+                    }
+                    if (count == 0) {
+                        str[dest_idx++] = 'x';
+                    } else {
+                        str[dest_idx++] = (char)hex_val;
+                        src_idx--;
+                    }
+                    break;
+                }
+
+                default:
+                    str[dest_idx++] = escape_char;
+                    break;
+            }
+        } else {
+            str[dest_idx++] = lexer->src[src_idx];
+        }
+        src_idx++;
+    }
+    str[dest_idx] = '\0'; 
 
     token_data data = {0};
     data.properties.value.type = type_string;
     data.properties.value.value.str_value = strdup(str);
 
     token token = createToken(lexer, string_literal_token, &data, str);
+
     free(str);
     return token;
 }
