@@ -13,12 +13,16 @@ typedef enum {
     false_token,                // false
     null_literal_token,         // null
     short_token,                // short
+    ushort_token,               // ushort
     short_literal_token,        // 2 bytes
     int_token,                  // int
+    uint_token,                 // uint
     int_literal_token,          // 0, 1, 2, 3...
     long_token,                 // long
+    ulong_token,                // ulong
     long_literal_token,         // 100000000000000000...
     long_long_token,            // long long
+    ullong_token,               // ullong
     long_long_literal_token,    // 10000000000000000000000...
     float_token,                // float
     float_literal_token,        // 3.14...
@@ -83,6 +87,7 @@ typedef enum {
     address_token,              // &
     dot_token,                  // .
     arrow_token,                // ->
+    ellipsis_token,             // ...
     null_token,
     eof_token
 } token_type;

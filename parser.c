@@ -29,7 +29,7 @@ astNode *parseImplStatement(parser *parser);
 astNode *parseTraitStatement(parser *parser);
 astNode *parseUnion(parser *parser);
 astNode *parseEnum(parser *parser);
-astNode *parseParamList(parser *parser);
+astNode *parseParamList(parser *parser, int *is_variadic);
 astNode *parseType(parser *parser);
 dataFlags parseFlags(parser *parser);
 static int isTypeToken(token_type type);
@@ -840,7 +840,8 @@ astNode *parseFunction(parser *parser){
     if(parser->current.type != l_paren_token) return NULL;
     advanceParser(parser);
 
-    astNode *params = parseParamList(parser);
+    int is_variadic = 0;
+    astNode *params = parseParamList(parser, &is_variadic);
 
     if(parser->current.type != r_paren_token){
         free(func_name);
@@ -860,11 +861,11 @@ astNode *parseFunction(parser *parser){
 
     astNode *body = parseBody(parser);
 
-    astNode *node = createFunctionNode(func_name, return_type, params, body, flags);
+    astNode *node = createFunctionNode(func_name, return_type, params, body, flags, is_variadic);
     free(func_name);
     return node;}
 
-astNode *parseParamList(parser *parser){
+astNode *parseParamList(parser *parser, int *is_variadic){
     if(parser->current.type == r_paren_token){
         return createBodyNode(NULL, 0);
     }
@@ -875,6 +876,11 @@ astNode *parseParamList(parser *parser){
     while(parser->current.type != r_paren_token && parser->current.type != eof_token){
         astNode *param_node = NULL;
 
+        if(parser->current.type == ellipsis_token){
+            *is_variadic = 1;
+            advanceParser(parser);
+            break;
+        }
         if(parser->current.type == self_token){
             char *param_name = strdup("self");
             advanceParser(parser);
@@ -888,7 +894,7 @@ astNode *parseParamList(parser *parser){
                 free(params);
                 return NULL;
             }
-            
+
             char *param_name = strdup(parser->current.data.identifier);
             advanceParser(parser);
 
@@ -974,7 +980,7 @@ astNode *parseType(parser *parser){
         }
     }
 
-    else if(t.type == void_token || t.type == short_token || t.type == int_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == bool_token || t.type == identifier_token){
+    else if(t.type == void_token || t.type == short_token || t.type == int_token || t.type == float_token || t.type == double_token || t.type == string_token || t.type == bool_token || t.type == ushort_token || t.type == uint_token || t.type == ulong_token || t.type == ullong_token || t.type == identifier_token){
         type_node = createIdentifierNode(t.lexeme);
         advanceParser(parser);
     }

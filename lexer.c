@@ -185,8 +185,12 @@ token lexIdent(lexer *lexer){
     keyword("null", null_literal_token);
 
     keyword("short", short_token);
+    keyword("ushort", ushort_token);
     keyword("int", int_token);
+    keyword("uint", uint_token);
     keyword("long", long_token);
+    keyword("ulong", ullong_token);
+    keyword("ullong", ullong_token);
     keyword("float", float_token);
     keyword("double", double_token);
     keyword("string", string_token);
@@ -286,6 +290,11 @@ token nextToken(lexer *lexer){
         case ',':
             return createToken(lexer, comma_token, &(token_data){0}, ",");
         case '.':
+            if(peek(lexer) == '.' && peekNext(lexer) == '.'){
+                advance(lexer);
+                advance(lexer);
+                return createToken(lexer, ellipsis_token, &(token_data){0}, "...");
+            }
             return createToken(lexer, dot_token, &(token_data){0}, ".");
         case ';':
             return createToken(lexer, semicolon_token, &(token_data){0}, ";");

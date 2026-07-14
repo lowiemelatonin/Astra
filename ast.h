@@ -5,9 +5,13 @@ typedef enum {
     type_void,
     type_bool,
     type_short,
+    type_ushort,
     type_int,
+    type_uint,
     type_long,
+    type_ulong,
     type_long_long,
+    type_ullong,
     type_float,
     type_double,
     type_long_double,
@@ -20,9 +24,13 @@ typedef struct {
     union {
         int b_value;
         short s_value;
+        unsigned short us_value;
         int i_value;
+        unsigned int ui_value;
         long l_value;
+        unsigned long ul_value;
         long long ll_value;
+        unsigned long long ull_value;
         float f_value;
         double d_value;
         long double ld_value;
@@ -153,6 +161,7 @@ typedef struct astNode {
             astNode *params;
             astNode *body;
             dataFlags flags;
+            int is_variadic;
         } function;
 
         struct {
@@ -265,7 +274,7 @@ astNode *createPointerNode(astNode *pointer);
 astNode *createBodyNode(astNode **elements, int elements_count);
 astNode *createArrayNode(astNode *type, astNode *size, astNode *elements);
 astNode *createArrayAccessNode(astNode *array, astNode *index);
-astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *params, astNode *body, dataFlags flags);
+astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *params, astNode *body, dataFlags flags, int is_variadic);
 astNode *createCallNode(astNode *identifier, astNode *args);
 astNode *createDataOperationNode(astNode *left, astNode *right, opType op);
 astNode *createIfNode(astNode *condition, astNode *then_branch, astNode *else_branch);

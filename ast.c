@@ -99,7 +99,7 @@ astNode *createArrayAccessNode(astNode *array, astNode *index){
     return node;
 }
 
-astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *params, astNode *body, dataFlags flags){
+astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *params, astNode *body, dataFlags flags, int is_variadic){
     astNode *node = allocNode(function_node);
     node->function.identifier = strdup(identifier);
     if(!node->function.identifier){
@@ -111,6 +111,7 @@ astNode *createFunctionNode(char *identifier, astNode *return_type, astNode *par
     node->function.params = params;
     node->function.body = body;
     node->function.flags = flags;
+    node->function.is_variadic = is_variadic;
     return node;
 }
 
