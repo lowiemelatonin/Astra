@@ -29,6 +29,7 @@ astNode *parseImplStatement(parser *parser);
 astNode *parseTraitStatement(parser *parser);
 astNode *parseUnion(parser *parser);
 astNode *parseEnum(parser *parser);
+astNode *parseTypedef(parser *parser);
 astNode *parseParamList(parser *parser, int *is_variadic);
 astNode *parseType(parser *parser);
 dataFlags parseFlags(parser *parser);
@@ -859,11 +860,18 @@ astNode *parseFunction(parser *parser){
         return_type = createIdentifierNode("void");
     }
 
-    astNode *body = parseBody(parser);
+    astNode *body = NULL;
+
+    if(parser->current.type == l_brace_token){
+        body = parseBody(parser);
+    } else if(parser->current.type == semicolon_token){
+        advanceParser(parser);
+    }
 
     astNode *node = createFunctionNode(func_name, return_type, params, body, flags, is_variadic);
     free(func_name);
-    return node;}
+    return node;
+}
 
 astNode *parseParamList(parser *parser, int *is_variadic){
     if(parser->current.type == r_paren_token){
@@ -1202,6 +1210,30 @@ astNode *parseEnum(parser *parser){
     return node;
 }
 
+astNode *parseTypedef(parser *parser) {
+    advanceParser(parser);
+
+    astNode *target_type = parseType(parser);
+    if(!target_type) return NULL;
+
+    if(parser->current.type != identifier_token){
+        freeAst(target_type);
+        return NULL;
+    }
+
+    char *alias_name = strdup(parser->current.data.identifier);
+    advanceParser(parser);
+
+    if(parser->current.type == semicolon_token){
+        advanceParser(parser);
+    }
+
+    astNode *node = createTypedefNode(target_type, alias_name);
+    free(alias_name);
+    
+    return node;
+}
+
 dataFlags parseFlags(parser *parser) {
     dataFlags flags = 0;
     while (parser->current.type == const_token || parser->current.type == static_token) {
@@ -1234,6 +1266,8 @@ astNode *parseStatement(parser *parser){
             return parseEnum(parser);
         case union_token:
             return parseUnion(parser);
+        case typedef_token:
+            return parseTypedef(parser);
         case impl_token:
             return parseImplStatement(parser);
         case trait_token:

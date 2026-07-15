@@ -312,6 +312,7 @@ token lexIdent(lexer *lexer){
     keyword("float", float_token);
     keyword("double", double_token);
     keyword("string", string_token);
+    keyword("typedef", typedef_token);
     keyword("struct", struct_token);
     keyword("enum", enum_token);
     keyword("union", union_token);
@@ -324,6 +325,12 @@ token lexIdent(lexer *lexer){
     token_data data = {0};
     if(type == identifier_token){
         data.identifier = strdup(text);
+    } else if(type == true_token){
+        data.properties.value.type = type_bool;
+        data.properties.value.value.b_value = 1;
+    } else if(type == false_token){
+        data.properties.value.type = type_bool;
+        data.properties.value.value.b_value = 0;
     }
 
     token token = createToken(lexer, type, &data, text);

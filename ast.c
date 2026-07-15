@@ -293,6 +293,20 @@ astNode *createCastNode(astNode *type, astNode *operand){
     return node;
 }
 
+astNode *createTypedefNode(astNode *type, char *alias_name){
+    astNode *node = allocNode(typedef_node);
+    if(!node) return NULL;
+
+    node->typedef_stmt.type = type;
+    node->typedef_stmt.alias_name = strdup(alias_name);
+
+    if(!node->typedef_stmt.alias_name){
+        free(node);
+        return NULL;
+    }
+    return node;
+}
+
 void freeAst(astNode *node){
     if(!node) return;
 
@@ -426,6 +440,10 @@ void freeAst(astNode *node){
         case cast_node:
             freeAst(node->cast_expr.type);
             freeAst(node->cast_expr.operand);
+            break;
+        case typedef_node:
+            freeAst(node->typedef_stmt.type);
+            free(node->typedef_stmt.alias_name);
             break;
         default:
             break;

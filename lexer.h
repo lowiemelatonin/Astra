@@ -30,6 +30,7 @@ typedef enum {
     long_double_literal_token,  // 3.1415...
     string_token,               // string
     string_literal_token,       // "dolor sit"
+    typedef_token,              // typedef
     struct_token,               // struct
     enum_token,                 // enum
     union_token,                // union

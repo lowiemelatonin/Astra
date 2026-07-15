@@ -106,7 +106,8 @@ typedef enum {
     union_node,
     sizeof_node,
     typeof_node,
-    cast_node
+    cast_node,
+    typedef_node
 } nodeType;
 
 typedef struct astNode astNode;
@@ -263,6 +264,11 @@ typedef struct astNode {
             astNode *type;
             astNode *operand;
         } cast_expr;
+
+        struct {
+            astNode *type;
+            char *alias_name;
+        } typedef_stmt;
     };
 } astNode;
 
@@ -298,6 +304,7 @@ astNode *createUnionNode(char *identifier, astNode *body);
 astNode *createSizeofNode(astNode *operand);
 astNode *createTypeofNode(astNode *operand);
 astNode *createCastNode(astNode *type, astNode *operand);
+astNode *createTypedefNode(astNode *type, char *alias_name);
 
 void printAst(astNode *node, int level);
 void freeAst(astNode *node);
