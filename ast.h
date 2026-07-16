@@ -47,6 +47,13 @@ typedef enum {
     slash_op,
     percent_op,
 
+    bitwise_and_op,
+    bitwise_or_op,
+    bitwise_xor_op,
+    bitwise_not_op,
+    shift_left_op,
+    shift_right_op,
+
     and_op,
     or_op,
     not_op,
@@ -65,6 +72,12 @@ typedef enum {
     slash_assignment_op,
     percent_assignment_op,
 
+    bitwise_and_assignment_op,
+    bitwise_or_assignment_op,
+    bitwise_xor_assignment_op,
+    shift_left_assignment_op,
+    shift_right_assignment_op,
+    
     dereference_op,
     address_op
 } opType;

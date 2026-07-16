@@ -42,6 +42,11 @@ typedef enum {
     star_token,                 // *
     slash_token,                // /
     percent_token,              // %
+    bitwise_or_token,           // |
+    bitwise_xor_token,          // ^
+    bitwise_not_token,          // ~
+    shift_left_token,           // <<
+    shift_right_token,          // >>
     and_token,                  // &&
     or_token,                   // ||
     not_token,                  // !
@@ -51,6 +56,11 @@ typedef enum {
     star_equal_token,           // *=
     slash_equal_token,          // /=
     percent_equal_token,        // %=
+    and_equal_token,            // &=
+    or_equal_token,             // |=
+    xor_equal_token,            // ^=
+    shift_left_equal_token,     // <<=
+    shift_right_equal_token,    // >>=
     equal_equal_token,          // ==
     not_equal_token,            // !=
     less_token,                 // <

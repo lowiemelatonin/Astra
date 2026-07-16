@@ -11,6 +11,10 @@ astNode *parseRelational(parser *parser);
 astNode *parseEquality(parser *parser);
 astNode *parseLogicalAnd(parser *parser);
 astNode *parseLogicalOr(parser *parser);
+astNode *parseShift(parser *parser);
+astNode *parseBitwiseAnd(parser *parser);
+astNode *parseBitwiseXor(parser *parser);
+astNode *parseBitwiseOr(parser *parser);
 astNode *parseReturnStatement(parser *parser);
 astNode *parseContinueStatement(parser *parser);
 astNode *parseBreakStatement(parser *parser);
@@ -50,7 +54,7 @@ astNode *parseAssignment(parser *parser){
     astNode *left = parseLogicalOr(parser);
     token_type type = parser->current.type;
 
-    if(type == equal_token || type == plus_equal_token || type == minus_equal_token || type == star_equal_token || type == slash_equal_token || type == percent_equal_token){
+    if(type == equal_token || type == plus_equal_token || type == minus_equal_token || type == star_equal_token || type == slash_equal_token || type == percent_equal_token || type == and_equal_token || type == or_equal_token || type == xor_equal_token || type == shift_left_equal_token || type == shift_right_equal_token){
         opType op;
         switch(type){
             case equal_token:
@@ -70,6 +74,21 @@ astNode *parseAssignment(parser *parser){
                 break;
             case percent_equal_token:
                 op = percent_assignment_op;
+                break;
+            case and_equal_token:
+                op = bitwise_and_assignment_op;
+                break;
+            case or_equal_token:
+                op = bitwise_or_assignment_op;
+                break;
+            case xor_equal_token:
+                op = bitwise_xor_assignment_op;
+                break;
+            case shift_left_equal_token:
+                op = shift_left_assignment_op;
+                break;
+            case shift_right_equal_token:
+                op = shift_right_assignment_op;
                 break;
             default:
                 op = assignment_op;
@@ -337,7 +356,7 @@ astNode *parseUnary(parser *parser){
             return createCastNode(type, operand);
         }
     }
-    if(current_type == not_token || current_type == minus_token || current_type == decrement_token || current_type == plus_token || current_type == increment_token || current_type == star_token || current_type == address_token || current_type == sizeof_token){
+    if(current_type == not_token || current_type == minus_token || current_type == decrement_token || current_type == plus_token || current_type == increment_token || current_type == star_token || current_type == address_token || current_type == sizeof_token || current_type == bitwise_not_token){
         token op = parser->current;
         advanceParser(parser);
 
@@ -383,6 +402,9 @@ astNode *parseUnary(parser *parser){
                 break;
             case address_token:
                 operation = address_op;
+                break;
+            case bitwise_not_token:
+                operation = bitwise_not_op;
                 break;
             default:
                 return parsePostfix(parser);
@@ -452,13 +474,13 @@ astNode *parseAdditive(parser *parser){
 }
 
 astNode *parseRelational(parser *parser){
-    astNode *left = parseAdditive(parser);
+    astNode *left = parseShift(parser);
 
     while(parser->current.type == less_token || parser->current.type == less_equal_token || parser->current.type == greater_token || parser->current.type == greater_equal_token){
         token op = parser->current;
         advanceParser(parser);
 
-        astNode *right = parseAdditive(parser);
+        astNode *right = parseShift(parser);
 
         opType operation;
         switch(op.type){
@@ -508,12 +530,12 @@ astNode *parseEquality(parser *parser){
 }
 
 astNode *parseLogicalAnd(parser *parser){
-    astNode *left = parseEquality(parser);
+    astNode *left = parseBitwiseOr(parser);
 
     while(parser->current.type == and_token){
         advanceParser(parser);
 
-        astNode *right = parseEquality(parser);
+        astNode *right = parseBitwiseOr(parser);
         left = createDataOperationNode(left, right, and_op);
     }
     return left;
@@ -527,6 +549,57 @@ astNode *parseLogicalOr(parser *parser){
 
         astNode *right = parseLogicalAnd(parser);
         left = createDataOperationNode(left, right, or_op);
+    }
+    return left;
+}
+
+astNode *parseShift(parser *parser){
+    astNode *left = parseAdditive(parser);
+
+    while(parser->current.type == shift_left_token || parser->current.type == shift_right_token){
+        token op = parser->current;
+        advanceParser(parser);
+
+        astNode *right = parseAdditive(parser);
+        opType operation = (op.type == shift_left_token) ? shift_left_op : shift_right_op;
+        
+        left = createDataOperationNode(left, right, operation);
+    }
+    return left;
+}
+
+astNode *parseBitwiseAnd(parser *parser){
+    astNode *left = parseEquality(parser);
+
+    while(parser->current.type == address_token){
+        advanceParser(parser);
+
+        astNode *right = parseEquality(parser);
+        left = createDataOperationNode(left, right, bitwise_and_op);
+    }
+    return left;
+}
+
+astNode *parseBitwiseXor(parser *parser){
+    astNode *left = parseBitwiseAnd(parser);
+
+    while(parser->current.type == bitwise_xor_token){
+        advanceParser(parser);
+
+        astNode *right = parseBitwiseAnd(parser);
+        left = createDataOperationNode(left, right, bitwise_xor_op);
+    }
+    return left;
+}
+
+astNode *parseBitwiseOr(parser *parser){
+    astNode *left = parseBitwiseXor(parser);
+
+    while(parser->current.type == bitwise_or_token){
+        advanceParser(parser);
+
+        astNode *right = parseBitwiseXor(parser);
+        left = createDataOperationNode(left, right, bitwise_or_op);
     }
     return left;
 }
