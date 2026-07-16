@@ -296,6 +296,7 @@ token lexIdent(lexer *lexer){
     keyword("continue", continue_token);
     keyword("const", const_token);
     keyword("static", static_token);
+    keyword("extern", extern_token);
 
     keyword("bool", bool_token);
     keyword("true", true_token);

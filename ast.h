@@ -71,7 +71,8 @@ typedef enum {
 
 typedef enum {
     const_flag = 1 << 0,
-    static_flag = 1 << 1
+    static_flag = 1 << 1,
+    extern_flag = 1 << 2
 } dataFlags;
 
 typedef enum {
