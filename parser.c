@@ -19,6 +19,7 @@ astNode *parseReturnStatement(parser *parser);
 astNode *parseContinueStatement(parser *parser);
 astNode *parseBreakStatement(parser *parser);
 astNode *parseBody(parser *parser);
+astNode *parseIfExpression(parser *parser);
 astNode *parseIfStatement(parser *parser);
 astNode *parseSwitchStatement(parser *parser);
 astNode *parseCaseStatement(parser *parser);
@@ -114,6 +115,8 @@ astNode *parsePrimary(parser *parser) {
         advanceParser(parser);
         return node;
     }
+
+    if(token.type == if_token) return parseIfExpression(parser);
 
     if(token.type == identifier_token || token.type == const_token || token.type == static_token || token.type == extern_token){
         dataFlags flags = parseFlags(parser);
@@ -669,6 +672,58 @@ astNode *parseBody(parser *parser){
     astNode *body = createBodyNode(elements, count);
     free(elements);
     return body;
+}
+
+astNode *parseIfExpression(parser *parser) {
+    if(parser->current.type != if_token) return NULL;
+    advanceParser(parser);
+
+    if(parser->current.type != l_paren_token) {
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *condition = parseExpression(parser);
+    if(!condition) return NULL;
+
+    if(parser->current.type != r_paren_token) {
+        freeAst(condition);
+        return NULL;
+    }
+    advanceParser(parser);
+
+    astNode *then_branch = NULL;
+    if(parser->current.type == l_brace_token) {
+        then_branch = parseBody(parser);
+    } else {
+        then_branch = parseExpression(parser);
+    }
+
+    if(!then_branch) {
+        freeAst(condition);
+        return NULL;
+    }
+
+    astNode *else_branch = NULL;
+    if(parser->current.type == else_token) {
+        advanceParser(parser);
+        
+        if(parser->current.type == l_brace_token) {
+            else_branch = parseBody(parser);
+        } else if (parser->current.type == if_token) {
+            else_branch = parseIfExpression(parser);
+        } else {
+            else_branch = parseExpression(parser);
+        }
+
+        if(!else_branch) {
+            freeAst(condition);
+            freeAst(then_branch);
+            return NULL;
+        }
+    }
+
+    return createIfNode(condition, then_branch, else_branch);
 }
 
 astNode *parseIfStatement(parser *parser){
