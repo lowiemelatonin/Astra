@@ -320,6 +320,7 @@ token lexIdent(lexer *lexer){
     keyword("const", const_token);
     keyword("static", static_token);
     keyword("extern", extern_token);
+    keyword("volatile", volatile_token);
 
     keyword("bool", bool_token);
     keyword("true", true_token);

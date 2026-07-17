@@ -85,7 +85,8 @@ typedef enum {
 typedef enum {
     const_flag = 1 << 0,
     static_flag = 1 << 1,
-    extern_flag = 1 << 2
+    extern_flag = 1 << 2,
+    volatile_flag = 1 << 3
 } dataFlags;
 
 typedef enum {

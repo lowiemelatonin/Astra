@@ -118,7 +118,7 @@ astNode *parsePrimary(parser *parser) {
 
     if(token.type == if_token) return parseIfExpression(parser);
 
-    if(token.type == identifier_token || token.type == const_token || token.type == static_token || token.type == extern_token){
+    if(token.type == identifier_token || token.type == const_token || token.type == static_token || token.type == extern_token || token.type == volatile_token){
         dataFlags flags = parseFlags(parser);
 
         if(parser->current.type != identifier_token){
@@ -1364,13 +1364,15 @@ astNode *parseTypedef(parser *parser) {
 
 dataFlags parseFlags(parser *parser) {
     dataFlags flags = 0;
-    while (parser->current.type == const_token || parser->current.type == static_token || parser->current.type == extern_token) {
+    while (parser->current.type == const_token || parser->current.type == static_token || parser->current.type == extern_token || parser->current.type == volatile_token) {
         if (parser->current.type == const_token) {
             flags |= const_flag;
         } else if (parser->current.type == static_token) {
             flags |= static_flag;
         } else if (parser->current.type == extern_token) {
             flags |= extern_flag;
+        } else if (parser->current.type == volatile_token){
+            flags |= volatile_flag;
         }
         advanceParser(parser);
     }

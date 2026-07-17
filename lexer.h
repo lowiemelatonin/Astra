@@ -8,6 +8,7 @@ typedef enum {
     const_token,                // const
     static_token,               // static
     extern_token,               // extern
+    volatile_token,             // volatile
     void_token,                 // void
     bool_token,                 // bool
     true_token,                 // true
